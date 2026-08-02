@@ -1,0 +1,10 @@
+branch_id,branch_name,city,state,timezone,opened_date,op,change_ts
+BR01,Chicago Central,Chicago,IL,America/Chicago,2017-03-12,I,2026-07-20 13:11:33-05:00
+BR02,Newark Depot,Newark,NJ,America/New_York,2007-08-10,I,2026-07-20 17:41:21-05:00
+BR03,Atlanta South,Atlanta,GA,America/New_York,2014-10-08,I,2026-07-20 16:44:01-05:00
+BR04,Dallas North,Dallas,TX,America/Chicago,2004-10-11,I,2026-07-20 11:17:14-05:00
+BR05,Denver Foothills,Denver,CO,America/Denver,2003-08-28,I,2026-07-20 22:11:07-05:00
+BR06,Portland River,Portland,OR,America/Los_Angeles,2009-07-18,I,2026-07-20 21:44:11-05:00
+BR07,Bozeman Rural,Bozeman,MT,America/Denver,2016-06-22,I,2026-07-20 03:10:40-05:00
+BR08,Fresno Valley,Fresno,CA,America/Los_Angeles,2000-06-29,I,2026-07-20 21:13:03-05:00
+WEB,Online Store,,,UTC,2019-04-01,I,2026-07-20 01:58:58-05:00
