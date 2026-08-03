@@ -12,6 +12,18 @@ sources:
     tables:
       - name: account
         description: One row per CRM account (a customer or prospect company).
+        tests:
+          - expected_source_columns:
+              column_names:
+                - filename
+                - Id
+                - Name
+                - Industry
+                - BillingCity
+                - BillingState
+                - AccountSource
+                - Owner
+                - LastModifiedDate
         columns:
           - name: filename
             description: Path of the nightly file this row was read from. Use it to trace a row back to the delivery it arrived in.

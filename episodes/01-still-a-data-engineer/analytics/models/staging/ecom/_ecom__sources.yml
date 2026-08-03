@@ -12,6 +12,17 @@ sources:
     tables:
       - name: customer
         description: One row per e-commerce customer account.
+        tests:
+          - expected_source_columns:
+              column_names:
+                - filename
+                - customer_id
+                - company_name
+                - email_domain
+                - contact_email
+                - country
+                - created_at
+                - updated_at
         columns:
           - name: filename
             description: Path of the nightly file this row was read from. Use it to trace a row back to the delivery it arrived in.

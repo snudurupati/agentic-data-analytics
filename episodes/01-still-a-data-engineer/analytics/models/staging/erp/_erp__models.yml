@@ -1,0 +1,78 @@
+version: 2
+
+models:
+  - name: stg_erp__branch
+    description: >
+      One row per branch, deduplicated to the most recent change_ts per
+      branch_id. Loads incrementally: each run only pulls change events
+      newer than what's already loaded, then merges them in by branch_id.
+      Rows with op = 'D' are kept, not removed; they show the branch's last
+      known state before deletion.
+    columns:
+      - name: branch_id
+        description: Branch identifier.
+        tests:
+          - unique
+          - not_null
+
+  - name: stg_erp__customer
+    description: >
+      One row per ERP customer account, deduplicated to the most recent
+      change_ts per customer_number. Loads incrementally: each run only
+      pulls change events newer than what's already loaded, then merges
+      them in by customer_number. Rows with op = 'D' are kept, not removed;
+      they show the customer's last known state before deletion.
+    columns:
+      - name: customer_number
+        description: ERP customer identifier.
+        tests:
+          - unique
+          - not_null
+
+  - name: stg_erp__order_header
+    description: >
+      One row per order, deduplicated to the most recent change_ts per
+      order_number. Loads incrementally: each run only pulls change events
+      newer than what's already loaded, then merges them in by
+      order_number. Rows with op = 'D' are kept, not removed; they show the
+      order's last known state before deletion.
+    columns:
+      - name: order_number
+        description: Order identifier.
+        tests:
+          - unique
+          - not_null
+
+  - name: stg_erp__order_line
+    description: >
+      One row per order line, deduplicated to the most recent change_ts per
+      (order_number, line_number). Loads incrementally: each run only pulls
+      change events newer than what's already loaded, then merges them in
+      by (order_number, line_number). Rows with op = 'D' are kept, not
+      removed; they show the line's last known state before deletion.
+      Uniqueness of the composite key is checked by
+      tests/assert_stg_erp__order_line_unique_key.sql, since a not_null and
+      unique test on each column alone can't catch a duplicate combination.
+    columns:
+      - name: order_number
+        description: Order the line belongs to. References stg_erp__order_header.
+        tests:
+          - not_null
+      - name: line_number
+        description: Line number within the order.
+        tests:
+          - not_null
+
+  - name: stg_erp__product
+    description: >
+      One row per product, deduplicated to the most recent change_ts per
+      product_id. Loads incrementally: each run only pulls change events
+      newer than what's already loaded, then merges them in by product_id.
+      Rows with op = 'D' are kept, not removed; they show the product's
+      last known state before deletion.
+    columns:
+      - name: product_id
+        description: Product identifier.
+        tests:
+          - unique
+          - not_null

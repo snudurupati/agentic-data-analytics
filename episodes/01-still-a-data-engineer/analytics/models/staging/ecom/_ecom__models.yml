@@ -1,0 +1,15 @@
+version: 2
+
+models:
+  - name: stg_ecom__customer
+    description: >
+      One row per e-commerce customer, deduplicated to the most recent
+      updated_at per customer_id. Loads incrementally: each run only pulls
+      rows with a newer updated_at than what's already loaded, then merges
+      them in by customer_id.
+    columns:
+      - name: customer_id
+        description: E-commerce customer identifier.
+        tests:
+          - unique
+          - not_null

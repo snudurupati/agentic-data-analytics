@@ -1,0 +1,15 @@
+version: 2
+
+models:
+  - name: stg_crm__account
+    description: >
+      One row per CRM account, deduplicated to the most recent
+      last_modified_at per account_id. Loads incrementally: each run only
+      pulls rows with a newer LastModifiedDate than what's already loaded,
+      then merges them in by account_id.
+    columns:
+      - name: account_id
+        description: CRM account identifier.
+        tests:
+          - unique
+          - not_null

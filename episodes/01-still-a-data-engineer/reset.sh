@@ -20,7 +20,13 @@
 #
 set -euo pipefail
 
-BASELINE="ep01-baseline"
+# Which tag to land on. Defaults to the blank slate.
+#
+#   ./reset.sh                 back to ep01-baseline, no sources, no models
+#   ./reset.sh ep01-sources    sources only, no models
+#   ./reset.sh ep01-staging    sources and staging models, ready to demo
+#
+BASELINE="${1:-ep01-baseline}"
 HERE="$(cd "$(dirname "$0")" && pwd)"
 REPO="$(git -C "$HERE" rev-parse --show-toplevel)"
 PROJECT="$HERE/analytics"

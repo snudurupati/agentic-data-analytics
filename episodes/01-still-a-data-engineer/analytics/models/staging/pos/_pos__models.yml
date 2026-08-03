@@ -1,0 +1,15 @@
+version: 2
+
+models:
+  - name: stg_pos__transaction
+    description: >
+      One row per in-branch sale, deduplicated to the most recent
+      received_at per transaction_id. Loads incrementally: each run only
+      pulls rows with a newer received_at than what's already loaded, then
+      merges them in by transaction_id.
+    columns:
+      - name: transaction_id
+        description: Transaction identifier.
+        tests:
+          - unique
+          - not_null

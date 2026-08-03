@@ -16,3 +16,6 @@ clean-targets:
 models:
   analytics:
     +materialized: table
+    staging:
+      +materialized: incremental
+      +incremental_strategy: merge
