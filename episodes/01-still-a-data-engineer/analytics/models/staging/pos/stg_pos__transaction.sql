@@ -8,7 +8,7 @@ with source as (
     select * from {{ source('pos', 'transaction') }}
 
     {% if is_incremental() %}
-    where received_at > (select max(received_at) from {{ this }})
+    where filename not in (select distinct source_file from {{ this }})
     {% endif %}
 ),
 

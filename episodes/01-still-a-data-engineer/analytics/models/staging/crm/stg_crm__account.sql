@@ -8,7 +8,7 @@ with source as (
     select * from {{ source('crm', 'account') }}
 
     {% if is_incremental() %}
-    where "LastModifiedDate" > (select max(last_modified_at) from {{ this }})
+    where filename not in (select distinct source_file from {{ this }})
     {% endif %}
 ),
 

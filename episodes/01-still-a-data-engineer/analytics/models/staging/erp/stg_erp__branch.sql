@@ -8,7 +8,7 @@ with source as (
     select * from {{ source('erp', 'branch') }}
 
     {% if is_incremental() %}
-    where change_ts > (select max(change_ts) from {{ this }})
+    where filename not in (select distinct source_file from {{ this }})
     {% endif %}
 ),
 
