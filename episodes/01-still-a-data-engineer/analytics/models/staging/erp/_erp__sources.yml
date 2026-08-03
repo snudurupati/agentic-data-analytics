@@ -1,0 +1,131 @@
+version: 2
+
+sources:
+  - name: erp
+    description: >
+      Enterprise resource planning (ERP) exports. One file per table lands in
+      landing/erp each night, named <table>_<date>.csv. The glob below picks
+      up every dated file for a table, so new nights show up without touching
+      this file. Each row carries a change data capture (CDC) op code (I, U,
+      or D for insert, update, or delete) and a change_ts timestamp from the
+      source system.
+    meta:
+      external_location: "read_csv('landing/erp/{identifier}_*.csv', filename=true, union_by_name=true)"
+    tables:
+      - name: branch
+        description: One row per retail branch.
+        columns:
+          - name: filename
+            description: Path of the nightly file this row was read from. Use it to trace a row back to the delivery it arrived in.
+          - name: branch_id
+            description: Branch identifier.
+          - name: branch_name
+            description: Branch name.
+          - name: city
+            description: City the branch is located in.
+          - name: state
+            description: State the branch is located in.
+          - name: timezone
+            description: Branch's local timezone.
+          - name: opened_date
+            description: Date the branch opened.
+          - name: op
+            description: CDC op code for this row (I, U, or D).
+          - name: change_ts
+            description: Timestamp the change was captured in the ERP.
+
+      - name: customer
+        description: One row per ERP customer account.
+        columns:
+          - name: filename
+            description: Path of the nightly file this row was read from. Use it to trace a row back to the delivery it arrived in.
+          - name: customer_number
+            description: ERP customer identifier.
+          - name: customer_name
+            description: Customer (company) name.
+          - name: industry_code
+            description: ERP industry classification code.
+          - name: city
+            description: Customer's city.
+          - name: state
+            description: Customer's state.
+          - name: credit_limit
+            description: Customer's approved credit limit.
+          - name: created_on
+            description: Timestamp the customer record was created.
+          - name: updated_on
+            description: Timestamp the customer record was last updated.
+          - name: op
+            description: CDC op code for this row (I, U, or D).
+          - name: change_ts
+            description: Timestamp the change was captured in the ERP.
+
+      - name: order_header
+        description: One row per order.
+        columns:
+          - name: filename
+            description: Path of the nightly file this row was read from. Use it to trace a row back to the delivery it arrived in.
+          - name: order_number
+            description: Order identifier.
+          - name: customer_number
+            description: Customer the order belongs to. References erp.customer.
+          - name: branch_id
+            description: Branch the order was placed at. References erp.branch.
+          - name: order_datetime
+            description: Timestamp the order was placed.
+          - name: order_total
+            description: Total order amount.
+          - name: currency
+            description: Currency of order_total.
+          - name: status
+            description: Order status (for example INVOICED).
+          - name: op
+            description: CDC op code for this row (I, U, or D).
+          - name: change_ts
+            description: Timestamp the change was captured in the ERP.
+
+      - name: order_line
+        description: One row per line item on an order.
+        columns:
+          - name: filename
+            description: Path of the nightly file this row was read from. Use it to trace a row back to the delivery it arrived in.
+          - name: order_number
+            description: Order the line belongs to. References erp.order_header.
+          - name: line_number
+            description: Line number within the order.
+          - name: product_id
+            description: Product ordered. References erp.product.
+          - name: quantity
+            description: Quantity ordered.
+          - name: unit_price
+            description: Price per unit at time of order.
+          - name: line_amount
+            description: Extended amount for the line (quantity times unit_price).
+          - name: op
+            description: CDC op code for this row (I, U, or D).
+          - name: change_ts
+            description: Timestamp the change was captured in the ERP.
+
+      - name: product
+        description: One row per product in the catalog.
+        columns:
+          - name: filename
+            description: Path of the nightly file this row was read from. Use it to trace a row back to the delivery it arrived in.
+          - name: product_id
+            description: Product identifier.
+          - name: sku
+            description: Stock keeping unit (SKU) code.
+          - name: product_name
+            description: Product name.
+          - name: category
+            description: Product category.
+          - name: uom
+            description: Unit of measure.
+          - name: unit_cost
+            description: Cost per unit.
+          - name: list_price
+            description: List price per unit.
+          - name: op
+            description: CDC op code for this row (I, U, or D).
+          - name: change_ts
+            description: Timestamp the change was captured in the ERP.

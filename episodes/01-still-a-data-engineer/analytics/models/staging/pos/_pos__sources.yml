@@ -1,0 +1,31 @@
+version: 2
+
+sources:
+  - name: pos
+    description: >
+      Point of sale (POS) exports from branch terminals. One file per table
+      lands in landing/pos each night, named <table>_<date>.csv. The glob
+      below picks up every dated file for a table, so new nights show up
+      without touching this file.
+    meta:
+      external_location: "read_csv('landing/pos/{identifier}_*.csv', filename=true, union_by_name=true)"
+    tables:
+      - name: transaction
+        description: One row per in-branch sale.
+        columns:
+          - name: filename
+            description: Path of the nightly file this row was read from. Use it to trace a row back to the delivery it arrived in.
+          - name: transaction_id
+            description: Transaction identifier.
+          - name: branch_id
+            description: Branch the sale happened at.
+          - name: sale_datetime
+            description: Timestamp of the sale at the branch, in the branch's local time.
+          - name: received_at
+            description: Timestamp the transaction was received into the landing zone.
+          - name: sale_amount
+            description: Total sale amount.
+          - name: cost_amount
+            description: Total cost of goods sold for the transaction.
+          - name: item_count
+            description: Number of items in the transaction.

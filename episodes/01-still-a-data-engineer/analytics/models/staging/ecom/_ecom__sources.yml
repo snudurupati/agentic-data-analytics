@@ -1,0 +1,31 @@
+version: 2
+
+sources:
+  - name: ecom
+    description: >
+      E-commerce platform exports. One file per table lands in landing/ecom
+      each night, named <table>_<date>.csv. The glob below picks up every
+      dated file for a table, so new nights show up without touching this
+      file.
+    meta:
+      external_location: "read_csv('landing/ecom/{identifier}_*.csv', filename=true, union_by_name=true)"
+    tables:
+      - name: customer
+        description: One row per e-commerce customer account.
+        columns:
+          - name: filename
+            description: Path of the nightly file this row was read from. Use it to trace a row back to the delivery it arrived in.
+          - name: customer_id
+            description: E-commerce customer identifier.
+          - name: company_name
+            description: Name of the company the customer bought under.
+          - name: email_domain
+            description: Domain of the customer's contact email.
+          - name: contact_email
+            description: Customer's contact email address.
+          - name: country
+            description: Customer's country.
+          - name: created_at
+            description: Timestamp the customer record was created.
+          - name: updated_at
+            description: Timestamp the customer record was last updated.

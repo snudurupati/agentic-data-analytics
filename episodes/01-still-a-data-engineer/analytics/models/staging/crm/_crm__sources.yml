@@ -1,0 +1,33 @@
+version: 2
+
+sources:
+  - name: crm
+    description: >
+      Customer relationship management (CRM) exports. One file per table lands
+      in landing/crm each night, named <table>_<date>.csv. The glob below picks
+      up every dated file for a table, so new nights show up without touching
+      this file.
+    meta:
+      external_location: "read_csv('landing/crm/{identifier}_*.csv', filename=true, union_by_name=true)"
+    tables:
+      - name: account
+        description: One row per CRM account (a customer or prospect company).
+        columns:
+          - name: filename
+            description: Path of the nightly file this row was read from. Use it to trace a row back to the delivery it arrived in.
+          - name: Id
+            description: CRM account identifier.
+          - name: Name
+            description: Account (company) name.
+          - name: Industry
+            description: Industry classification assigned in the CRM.
+          - name: BillingCity
+            description: City on the account's billing address.
+          - name: BillingState
+            description: State on the account's billing address.
+          - name: AccountSource
+            description: How the account was acquired (for example Trade Show, Web).
+          - name: Owner
+            description: Name of the sales rep who owns the account.
+          - name: LastModifiedDate
+            description: Timestamp the account record was last modified in the CRM.
