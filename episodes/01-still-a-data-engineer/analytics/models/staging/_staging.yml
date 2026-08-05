@@ -1,0 +1,180 @@
+version: 2
+
+# Staging models. One per source table, each holding current state at a stated
+# grain, each loading incrementally.
+#
+# THREE FEEDS, THREE INCREMENTAL PATTERNS
+#
+# "Load incrementally" means something different for each feed shape, so these
+# models do not share one pattern. What they share is the structure: filter the
+# source down to what is new, collapse it to one row per key, then let
+# delete+insert on unique_key replace whatever was there before.
+#
+#   Change feed (erp)     Watermark on change_ts. Safe because the ERP's files
+#                         have strictly disjoint change_ts ranges, so a new
+#                         file is entirely above the mark. It is also exact:
+#                         the globally latest change is by definition the
+#                         latest change for its own key, so it always survives
+#                         the collapse and max(_change_ts) in the model is
+#                         always the true high water mark.
+#
+#   Full snapshot         Watermark on the record's own modified timestamp,
+#   (crm, ecom)           LastModifiedDate or updated_at. The system re-sends
+#                         every row nightly, but an untouched row keeps its old
+#                         timestamp and falls below the mark. Only genuinely
+#                         new or edited rows are reprocessed, which is what
+#                         makes a snapshot feed incremental at all.
+#
+#   Append only (pos)     Watermark on the batch date parsed from the filename,
+#                         using `>=` rather than `>`. See the header of
+#                         stg_pos__transactions.sql; this is the one that
+#                         quietly loses a branch if you get it wrong.
+#
+# Every watermark uses `>=`. A tie on the boundary value is reprocessed rather
+# than skipped, and reprocessing costs one redundant row because the collapse
+# and the delete+insert are both idempotent. Skipping costs data.
+#
+# WHAT INCREMENTAL COSTS HERE, STATED PLAINLY
+#
+# 1. Out of order arrival is not handled. Every watermark assumes batches show
+#    up in the order they were produced. A file that lands late carrying older
+#    change_ts values falls below the mark and is skipped in silence. The ERP
+#    feed is managed, so ordering is a reasonable expectation to hold it to.
+#    The point of sale feed is not managed, and its `>=` on the batch date
+#    covers a same night supplement but not a genuinely late night.
+#
+# 2. Deletions in the snapshot feeds are invisible, permanently. A snapshot
+#    says a record is gone by not containing it, and there is no tombstone to
+#    detect. stg_crm__accounts and stg_ecom__customers will keep a deleted row
+#    forever. Detecting it means diffing consecutive snapshots, which is a
+#    different model with a different cost, and it is not built here.
+#
+# 3. The change feeds keep deletes as flagged rows rather than removing them,
+#    because dbt's delete+insert cannot express "delete this key and insert
+#    nothing". Anything reading these models has to filter is_deleted. There is
+#    one such row in the data today, in stg_erp__customers.
+#
+# 4. Current state replaces history. These models answer "what is true now".
+#    An order that moved from SHIPPED to INVOICED keeps only INVOICED, and a
+#    product's price history is gone. Anything needing the value as it stood on
+#    a given day has to read the source change feed directly.
+#
+# AUDIT COLUMNS
+#
+# Every model here carries inserted_ts and updated_ts, per CONVENTIONS.md,
+# stamped by us at load time rather than taken from a source column. They are
+# added by the audit_columns() macro in macros/audit_columns.sql, which also
+# explains how inserted_ts survives a row being rewritten.
+#
+# These are the one exception to the full refresh comparison below. They record
+# when we saw a row, so an incrementally built table and a freshly rebuilt one
+# will always disagree on them, by design. Exclude them when diffing.
+#
+# INCREMENTAL AND FULL REFRESH MUST AGREE
+#
+# `dbt build --full-refresh` is what anyone reaches for when a number looks
+# wrong, so a table that comes out different depending on how it was built
+# turns the repair tool into a second source of confusion. These models were
+# verified by building three days of files incrementally, building the same
+# three days from scratch, and diffing the two tables row by row, ignoring the
+# audit columns.
+#
+# That check earned its keep immediately. The first version of the two snapshot
+# models collapsed with `order by filename desc`, which made _source_file mean
+# "the newest snapshot containing this row" on a full refresh and "the snapshot
+# that last wrote this row" on an incremental run. Every business column
+# matched; only the metadata disagreed, on 39 of 42 accounts. Ordering by the
+# record's own timestamp first and the earliest filename second fixed it.
+#
+# Rerun that diff after changing any model here. Passing tests do not catch
+# this class of bug, because both tables are internally consistent.
+#
+# A NOTE ON WHETHER THIS IS WORTH IT
+#
+# The whole landing zone is under 2,000 rows and a full refresh takes
+# milliseconds. None of the above complexity buys speed that is needed today.
+# It is a bet on volume that has not arrived. `dbt build --full-refresh`
+# rebuilds everything from the files and is the fastest way to rule the
+# incremental logic in or out when a number looks wrong.
+
+models:
+  - name: stg_crm__accounts
+    description: One row per CRM account, current state. Deleted accounts are not detectable, see file header.
+    columns:
+      - name: account_id
+        description: CRM account identifier.
+        data_tests: [unique, not_null]
+      - name: last_modified_at
+        description: Drives the incremental watermark. Must not be null or the row can never be picked up.
+        data_tests: [not_null]
+
+  - name: stg_ecom__customers
+    description: One row per e-commerce customer, current state. A different population from stg_erp__customers with no shared key.
+    columns:
+      - name: customer_id
+        description: E-commerce customer identifier.
+        data_tests: [unique, not_null]
+      - name: updated_at
+        description: Drives the incremental watermark.
+        data_tests: [not_null]
+
+  - name: stg_erp__customers
+    description: One row per ERP customer, current state. Finance's view, unrelated to the CRM account or the e-commerce customer.
+    columns:
+      - name: customer_number
+        description: ERP customer identifier.
+        data_tests: [unique, not_null]
+      - name: is_deleted
+        description: True where the latest change was a delete. Filter this downstream.
+        data_tests: [not_null]
+
+  - name: stg_erp__branches
+    description: One row per branch, current state. Includes the WEB pseudo-branch, which has no till.
+    columns:
+      - name: branch_id
+        description: Branch identifier.
+        data_tests: [unique, not_null]
+      - name: timezone
+        description: The only record of a branch's local time, needed to interpret stg_pos__transactions.sold_at_local.
+        data_tests: [not_null]
+
+  - name: stg_erp__products
+    description: One row per product, current state. Price and cost are current values, not the values at time of sale.
+    columns:
+      - name: product_id
+        description: Product identifier.
+        data_tests: [unique, not_null]
+
+  - name: stg_erp__order_headers
+    description: One row per order, current state. Status history is not retained.
+    columns:
+      - name: order_number
+        description: Order identifier.
+        data_tests: [unique, not_null]
+
+  - name: stg_erp__order_lines
+    description: One row per order line. The grain is order_number and line_number together.
+    columns:
+      - name: order_number
+        description: Parent order.
+        data_tests: [not_null]
+      - name: line_number
+        description: >
+          Line position within the order. Restarts at 1 per order, so it is not
+          a key on its own. The composite grain is asserted by
+          tests/assert_stg_erp__order_lines_unique_key.sql, written as a local
+          test rather than pulling in dbt_utils for one check.
+        data_tests: [not_null]
+
+  - name: stg_pos__transactions
+    description: One row per till transaction, basket level. No line detail and no customer, permanently.
+    columns:
+      - name: transaction_id
+        description: Till transaction identifier.
+        data_tests: [unique, not_null]
+      - name: sold_at_local
+        description: Branch wall clock time with no offset. Needs stg_erp__branches.timezone to be comparable to anything.
+        data_tests: [not_null]
+      - name: _batch_date
+        description: Batch key parsed from the filename. Drives the incremental watermark.
+        data_tests: [not_null]

@@ -1,0 +1,147 @@
+version: 2
+
+# Source: the point of sale (POS) tills in the branches.
+#
+# WHY THIS FEED HAS ITS OWN FILE
+#
+# The other three systems (customer relationship management, enterprise
+# resource planning, e-commerce) arrive through a managed connector. Somebody
+# owns them, the format is contracted, and if the shape changes we can expect
+# to be told.
+#
+# Nobody owns this one. Branch tills push comma separated value (CSV) files
+# straight into shared storage. There is no contract, no schema version, and no
+# vendor to ask for a change. Every column below is written by a till, so every
+# column below is capable of changing meaning or disappearing without notice.
+#
+# That difference is not cosmetic, so the two sets of sources are kept apart
+# rather than sitting in one file looking equally trustworthy. Anything built
+# on this source should assume the payload is evidence, not fact.
+#
+# WHAT THAT CHANGES IN PRACTICE
+#
+# `union_by_name = true` is kept, for the same reason as the managed sources:
+# without it, a till that reorders its columns misaligns every value silently,
+# which is the worst failure available. But union_by_name has its own cost on
+# an unowned feed. A dropped column comes back as null rather than as an error,
+# so a firmware update that stops sending cost_amount would quietly turn margin
+# into null instead of failing.
+#
+# The answer is not to remove union_by_name and trade one silent failure for a
+# worse one. It is to assert the shape explicitly, and that takes two tests
+# rather than one:
+#
+#   tests/assert_pos_schema_unchanged.sql catches a column being added, and
+#   catches a column changing type, which matters because DuckDB infers types
+#   by sampling the files, so a till writing "12.50 USD" instead of 12.50 turns
+#   sale_amount from DOUBLE into VARCHAR with no other warning.
+#
+#   the not_null tests on the columns below catch a column being dropped. The
+#   schema test cannot, and this is worth understanding rather than taking on
+#   trust: union_by_name unions every file in the glob, so while any older file
+#   still carries cost_amount the union still has a cost_amount column and the
+#   asserted shape still matches. What actually changes is that the rows from
+#   the new file arrive with nulls in it. So the drop shows up as a not_null
+#   failure on the first bad batch, and as a schema failure only once every
+#   file in the landing zone has stopped sending it, which is far too late.
+#
+# All seven payload columns are non-null across the 1,845 rows in landing/
+# today, so these assertions describe the feed as it actually is rather than as
+# we hope it will be.
+#
+# ONE FILE PER NIGHT IS NOT A SAFE ASSUMPTION
+#
+# Tills push per branch, so a single night can produce several files. The
+# supplementary file seen so far, transaction_20260722_b.csv, holds 28 rows
+# from BR03 only. Anything that treats "the newest file" as "last night's
+# complete data" will read one branch and call it a day.
+#
+# Group by the date embedded in the filename instead, which puts a main file
+# and its supplements in the same batch. Note that this trusts the filename
+# convention, which is itself unowned. It is the least bad batch key available:
+# received_at cannot do the job because it is a single constant per file and is
+# not unique across files, with transaction_20260722.csv and
+# transaction_20260722_b.csv both carrying 2026-07-21 23:15:00-07.
+#
+# A BRANCH GOING QUIET IS INVISIBLE TO SOURCE FRESHNESS
+#
+# Freshness below is a check on the feed, and the feed has eight tills behind
+# it. Seven healthy branches keep max(received_at) current no matter what the
+# eighth does, so no freshness threshold can detect a single dead till. That
+# already happened: BR07 uploaded nothing on 2026-07-21, and 45 of its sales
+# dated 07-20 turned up in the 07-22 file two days late.
+#
+# tests/assert_pos_latest_batch_branch_coverage.sql is the check that actually
+# sees this. Keep both. They answer different questions: freshness asks whether
+# the feed is alive, coverage asks whether all of it is.
+
+sources:
+  - name: pos
+    description: >
+      Point of sale tills in the branches, pushed into shared storage per
+      branch overnight. Append only: a batch adds new transactions and has
+      never yet restated one. That is an observation, not a guarantee, because
+      no contract says so.
+    loaded_at_field: received_at
+    freshness:
+      warn_after: {count: 36, period: hour}
+      error_after: {count: 72, period: hour}
+    tables:
+      - name: transaction
+        description: >
+          One row per till transaction, at basket level. There is no line
+          detail and no customer identifier, so point of sale sales cannot be
+          attributed to a product or a customer. That is a permanent ceiling on
+          what this feed can answer, not a gap waiting to be filled.
+        meta:
+          external_location: "read_csv('landing/pos/transaction_*.csv', union_by_name = true, filename = true)"
+        columns:
+          - name: transaction_id
+            description: >
+              Till transaction identifier, for example T90001. Unique across
+              all 1,873 rows seen so far, and the only usable key for
+              recognising a row already loaded. A void returning under an
+              existing identifier would break that assumption, and nothing in
+              the payload would announce it.
+            data_tests:
+              - not_null
+          - name: branch_id
+            description: >
+              Branch that made the sale. Joins to erp.branch, which also
+              carries a WEB pseudo-branch that has no till and never appears
+              here.
+            data_tests:
+              - not_null
+          - name: sale_datetime
+            description: >
+              When the sale rang up, in the branch's own local time with no
+              offset or timezone attached. Every other timestamp in this
+              project carries an offset, and the branch timezone exists only in
+              erp.branch.timezone, so any comparison needs that join first.
+            data_tests:
+              - not_null
+          - name: received_at
+            description: >
+              Stamped by whatever pushed the file, not by the landing zone. One
+              constant value per file and not unique across files, so it can
+              order nights but cannot order two batches from the same night.
+              Good enough to drive freshness, not good enough to resolve which
+              version of a row is newer.
+            data_tests:
+              - not_null
+          - name: sale_amount
+            description: Basket total in United States dollars.
+            data_tests:
+              - not_null
+          - name: cost_amount
+            description: Cost of goods for the basket in United States dollars.
+            data_tests:
+              - not_null
+          - name: item_count
+            description: Number of items in the basket.
+            data_tests:
+              - not_null
+          - name: filename
+            description: >
+              Path of the file this row was read from. The date inside it is
+              the batch key, since a night can produce more than one file.
