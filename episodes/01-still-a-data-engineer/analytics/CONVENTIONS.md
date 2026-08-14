@@ -70,6 +70,8 @@ behind the first.
 
 **The eight branches do not all run the same till software.** Point of sale was bought branch by branch over fifteen years, from more than one vendor. There is no shared specification, no shared version, and no central upgrade. Each till numbers its own sales, and nothing coordinates one branch with another.
 
+**The website is a branch.** Online sales are reported alongside the physical branches rather than separately, so "by branch" includes it. It has no city, no timezone and no opening date, because there is no building.
+
 **No line detail and no customer.** Point of sale carries a total and an item count, nothing more.
 Anything needing product mix or customer attribution cannot come from this feed, ever.
 
@@ -84,6 +86,16 @@ Finance allows fourteen days after the date of a sale for corrections to arrive.
 Anything arriving after that is not a normal correction. It is an exception, and applying it changes a number somebody has already acted on. That is a decision with an owner, not a default.
 
 This is a business rule. It is not visible anywhere in the data and no amount of profiling produces it.
+
+## A number is reported as it was, not as it is now
+
+When something about a customer, a product or a branch changes, the change applies from the day it happened. It does not reach backwards.
+
+A customer reclassified from Healthcare to Retail today was a Healthcare customer for every order they placed before today, and last month's Healthcare revenue does not move. The same holds for a product changing category, a branch changing name, or any other attribute a report groups by.
+
+This is the rule most often broken by accident, and the damage is invisible: a number that was correct when published quietly becomes a different number, and nobody is told.
+
+---
 
 ## Every table carries audit columns
 
@@ -107,6 +119,8 @@ it needs the record to still exist in order to be made.
 
 Drop a delete in staging and nobody downstream can ever answer when an account closed, or that it
 existed at all.
+
+**Deleting a customer stops new activity. It does not erase history.** Revenue already recognised against that customer stands, and a report covering a past period does not change because somebody was deleted afterwards. Revenue is only reversed by a void or a refund, never by a change to a customer record.
 
 ---
 
@@ -155,8 +169,7 @@ populations, no shared identifier, company names spelled differently in all thre
 is the only plausible bridge and it is unreliable.
 
 **This is an unsolved project, not a missing join.** There is no lookup table and no correct answer
-sitting somewhere. Any matching logic is a judgement, and a human signs off on the rule before it
-goes near a mart.
+sitting somewhere. Any matching logic is a judgement, and it is signed off by **the sales manager** before it goes near a mart. This is sales data, and the person accountable for the number is the person who approves the rule that produces it.
 
 Everyone tries to join these in their first week. It does not work.
 
@@ -205,7 +218,7 @@ each one changes a design decision.
 Some problems are not fixable in the warehouse and should come back to a person:
 
 - A source starts sending a column we did not expect, or stops sending one.
-- The same key arrives twice in one batch with no way to tell which is newer.
+- The same key arrives twice in one batch on a feed that carries nothing to order the two rows by. The ERP change feed is not one of these; it stamps every row.
 - A feed goes quiet in a way that looks like a slow day.
 - A rule is needed that nobody has written down.
 
