@@ -7,11 +7,11 @@ Runs on dbt Core with DuckDB. No cloud account, no warehouse, nothing behind a s
 
 ## Before you build anything
 
-**Read [`CONVENTIONS.md`](CONVENTIONS.md).** It covers what a nightly file means for each of the
-four systems (they disagree), who owns each feed and what can be asked of them, the audit columns
-every table carries, and why we never hard-delete.
+**Read [`CONVENTIONS.md`](CONVENTIONS.md) and [`STANDARDS.md`](STANDARDS.md).**
 
-Most of it is not discoverable by looking at the data.
+`CONVENTIONS.md` holds the business rules: what each feed is, who owns it, how the business treats corrections, deletions and reporting periods. Most of it is not discoverable by looking at the data.
+
+`STANDARDS.md` holds how we build: layers, required columns, grain, testing, definition of done.
 
 ## Running it
 
