@@ -68,6 +68,8 @@ sends two days at once. So "sales for day X" is never "rows in the file named X.
 **One night can produce several files.** Tills push per branch, and a branch can send a second file
 behind the first.
 
+**The eight branches do not all run the same till software.** Point of sale was bought branch by branch over fifteen years, from more than one vendor. There is no shared specification, no shared version, and no central upgrade. Each till numbers its own sales, and nothing coordinates one branch with another.
+
 **No line detail and no customer.** Point of sale carries a total and an item count, nothing more.
 Anything needing product mix or customer attribution cannot come from this feed, ever.
 
@@ -75,24 +77,13 @@ Anything needing product mix or customer attribution cannot come from this feed,
 
 ## A period stays open for fourteen days
 
-Finance allows fourteen days after the date of a sale for corrections to arrive. A voided sale, a re-rung transaction, a price adjustment, a till that was reconciled late: all of it is expected inside that window.
+Finance allows fourteen days after the date of a sale for corrections to arrive. A voided sale, a re-rung transaction, a price adjustment, a till reconciled late: all of it is expected inside that window.
 
-**On day fifteen the period closes.** The number is final. Anything arriving after that is not a normal correction, and it does not get applied quietly.
+**On day fifteen the period closes.** The number is final and it has been published.
 
-This is a business rule. It is not visible anywhere in the data, and no amount of profiling produces it.
+Anything arriving after that is not a normal correction. It is an exception, and applying it changes a number somebody has already acted on. That is a decision with an owner, not a default.
 
-### What it means for a load
-
-- **The last fourteen days are open, not just last night.** A load that only considers the newest file is wrong on any day a correction arrives for an earlier one.
-- **A row whose business date is more than fourteen days old is an exception.** Raise it. Do not apply it, and do not silently discard it either.
-- **Restating a closed period needs a person.** There is a reason a number was published, and changing it after the fact is a decision with an owner.
-- **Older than fourteen days does not need reprocessing.** A load has a bounded window, which is what makes the cost of a nightly run flat instead of growing with history.
-
-### Why the window matters more than it looks
-
-Without it, "load everything that might have changed" has no end, so either you reprocess all history every night or you pick an arbitrary cutoff and hope. The window is what makes the correct answer bounded.
-
----
+This is a business rule. It is not visible anywhere in the data and no amount of profiling produces it.
 
 ## Every table carries audit columns
 
@@ -206,7 +197,6 @@ each one changes a design decision.
 - When a void happens, does the till reuse the transaction ID or issue a new one? Does it send zero or a negative amount?
 - Do the snapshot feeds ever drop a record, and if so, does anyone need to know?
 - What does the connector actually expose? Nobody has asked.
-- Is `transaction_id` unique across all eight branches, or only within one?
 
 ---
 
