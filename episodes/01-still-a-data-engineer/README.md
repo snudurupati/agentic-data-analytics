@@ -29,7 +29,7 @@ When you are finished, verify by running `dbt debug` from the analytics
 directory and show me the output, and tell me which branch I am on.
 
 Set up the environment only. Do not write any models, tests or macros, do not
-run reset.sh, and do not modify anything under landing/ or incoming/.
+run reset.sh, and do not modify anything under landing/.
 ```
 
 The last paragraph matters. Without it an agent will often start building models, because that is
@@ -101,7 +101,6 @@ analytics/
   CLAUDE.md             instructions for an agent working in this project
   CONVENTIONS.md        the team's warehouse standards. Read this first.
   landing/              files as delivered, one folder per source system
-  incoming/             files that have not been moved into landing yet
   models/               staging and marts
   macros/, tests/       custom tests
 ```

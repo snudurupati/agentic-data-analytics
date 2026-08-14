@@ -67,4 +67,4 @@ rm -f analytics.duckdb
 
 echo
 echo "Ground zero. Landing zone as delivered, no models, no database."
-echo "Anything copied from incoming/ into landing/ has been removed."
+echo "Untracked files under landing/ have been removed."
