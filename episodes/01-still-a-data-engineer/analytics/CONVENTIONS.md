@@ -51,7 +51,11 @@ POS feeds don't have an owner. Everything the tills write, `received_at` include
 
 **Transaction IDs are not unique across branches.**
 
-**Corrections reuse the transaction ID.** A void comes back as the same transaction ID with a zero amount. A refund comes back as the same transaction ID with a negative amount. An exchange comes back as the same transaction ID, and the amount can be negative, zero or positive.
+**Refunds, returns and exchanges are new transactions.** Each one gets its own transaction ID and carries a negative amount. An exchange can carry a negative, zero or positive amount depending on what was swapped. They can happen days or weeks after the original sale, at a different branch, on a different till.
+
+**Nothing in the feed links a refund back to the sale it reverses.** The till knows, the receipt knows, we do not.
+
+**Voids behave differently from vendor to vendor.** A void happens before the sale settles, in the same shift. Some branches never send the original sale at all. Others send a zero-amount row reusing the original transaction ID.
 
 **We count the website as a branch.** Online sales sit alongside the physical branches, so "by branch" includes the web. It has no city, no timezone and no opening date, because there is no building.
 
