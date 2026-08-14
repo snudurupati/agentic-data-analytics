@@ -18,8 +18,8 @@ already knows.
    episode 3 would be self-defeating.
 2. **Demos must reproduce on a clean machine.** No cloud warehouse account, no paid tooling, no
    signup wall. If an episode needs a model API key, its README says so and says what the run cost.
-3. **Failures are real.** Never write a demo that is rigged to fail. Retries stay in. A staged
-   failure is obvious within ten seconds to anyone who has done this work.
+3. **Nothing is rigged.** Whatever happens on camera is what happened. Retries stay in. Anything
+   staged is obvious within ten seconds to anyone who has done this work.
 4. **Spell out every acronym on first use** in any README or comment. MCP, RAG, SFR, all of them.
    The audience is assumed to know none of them.
 5. **One directory per episode, and each stands alone.** Shared code goes in `shared/` only when
@@ -33,18 +33,12 @@ already knows.
 - Number ranges as "3 to 4", not with a dash.
 - Plain English. Concise means fewer words, not denser jargon.
 
-## Commit messages describe structure, never lessons
+## Commit messages describe structure, never intent
 
-The repository is context, and git history is part of it. Claude Code reads commit messages and
-will infer intent from them.
+Write "Add POS transaction seed", not "add the seed that demonstrates late arrivals". Describe what
+changed structurally. Never describe what it is meant to teach, show or prove.
 
-Several episodes plant a specific failure for a demo, and a commit message naming that failure
-contaminates every experiment run in this repo afterwards. It has already happened once: a message
-reading "strip the answer out of demo.sh, move reveal queries to the vault" told a model there was
-a planted lesson and roughly where it lived.
-
-Write "Add POS transaction seed", not "add the seed that demonstrates late arrivals". Describe
-what changed structurally. Never describe what it is meant to prove.
+The same applies to file comments, script headers and README prose.
 
 ## Tags
 
@@ -53,6 +47,4 @@ history behind a tag once an episode has published, because viewers are checking
 
 ## Related repositories
 
-[Plumbline](https://github.com/snudurupati/plumbline) is the benchmark that episode 1's demos run
-against. It is a separate project with its own lifecycle and its own rules. Pin a version here
-rather than copying code out of it.
+None currently. Episode 1 is self-contained.
