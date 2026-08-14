@@ -19,6 +19,30 @@ If you think in medallion terms: `landing/` and sources are bronze, staging is t
 
 ---
 
+## Naming
+
+Lower snake case everywhere. No abbreviations except the ones in this table.
+
+| What | Pattern | Example |
+|---|---|---|
+| Source | as the source system names it | `erp.order_line` |
+| Staging model | `stg_<system>__<entity>`, entity plural | `stg_erp__order_lines` |
+| Dimension | `dim_<entity>`, singular | `dim_customer` |
+| Fact | `fct_<event>`, singular | `fct_order_line` |
+| Singular test | `assert_<what_it_asserts>` | `assert_order_total_reconciles` |
+
+Two underscores separate the system from the entity in a staging name, so you can always see where a model's data came from.
+
+Columns:
+
+- A surrogate key is `<entity>_key`. A foreign key to a dimension keeps that dimension's key name.
+- A business key from the source keeps the source's own name.
+- Booleans start `is_` or `has_`.
+- Dates end `_date`. Timestamps end `_ts`.
+- Money ends `_amount`. Counts end `_count`.
+
+---
+
 ## Every table carries a surrogate key and audit columns
 
 Every table in the warehouse has:
