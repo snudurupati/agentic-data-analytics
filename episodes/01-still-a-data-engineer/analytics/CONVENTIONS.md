@@ -20,7 +20,7 @@ How we build is in `STANDARDS.md`.
 
 In ERP a row arrives with `op = 'D'`.
 
-In snapshot feeds, deleted records don't exist in the feed.
+In snapshot feeds, a record only stops appearing when it has been deleted.
 
 ---
 
@@ -28,12 +28,12 @@ In snapshot feeds, deleted records don't exist in the feed.
 
 | Feed | How it reaches us | What we can ask for | Who we ask |
 |---|---|---|---|
-| **CRM** (Salesforce) | Managed connector | Arrival metadata, a sync identifier, per-sync row counts | *name the team* |
-| **ERP** (Oracle) | Managed connector, change feed | The same. They own the CDC configuration and can change it | *name the team* |
-| **E-commerce** (Shopify) | Managed connector | The same | *name the team* |
+| **CRM** (Salesforce) | Managed connector | Arrival metadata, a sync identifier, per-sync row counts | Ingestion team |
+| **ERP** (Oracle) | Managed connector, change feed | The same. They own the CDC configuration and can change it | Ingestion team |
+| **E-commerce** (Shopify) | Managed connector | The same | Ingestion team |
 | **Point of sale** | Branch tills push a file to shared storage overnight | Nothing | *nobody* |
 
-For the three connector feeds we can ask the source team to send more details if they exist. Fivetran stamps `_fivetran_synced`, Airbyte stamps `_airbyte_extracted_at`.
+The connectors send what is in the feed today. Fivetran stamps `_fivetran_synced`, Airbyte stamps `_airbyte_extracted_at`. If we need more than that, we ask the ingestion team.
 
 POS feeds don't have an owner. Everything the tills write, `received_at` included, can change meaning without warning.
 
@@ -50,6 +50,8 @@ POS feeds don't have an owner. Everything the tills write, `received_at` include
 **The branches do not run the same till software.** Tills are from various vendors over 15 years. There is no shared specification, no shared version and no central upgrade. Each till numbers its own sales, and nothing coordinates one branch with another.
 
 **Transaction IDs are not unique across branches.**
+
+**Corrections reuse the transaction ID.** A void comes back as the same transaction ID with a zero amount. A refund comes back as the same transaction ID with a negative amount. An exchange comes back as the same transaction ID, and the amount can be negative, zero or positive.
 
 **We count the website as a branch.** Online sales sit alongside the physical branches, so "by branch" includes the web. It has no city, no timezone and no opening date, because there is no building.
 
@@ -96,14 +98,3 @@ We call three different things a date:
 We hold `crm.account.Id`, `erp.customer.customer_number` and `ecom.customer.customer_id`. Three populations, no shared identifier, and company names spelled differently in all three. `email_domain` is the only bridge we have and it is unreliable.
 
 There is no lookup table and no correct answer waiting somewhere. Any matching logic is a judgement, so the sales manager signs it off before it goes near a mart.
-
----
-
-## Open questions
-
-We keep these here so the document does not turn into confident nonsense. Each one changes a design decision, and none of them has an answer yet.
-
-- A branch goes silent for a night. Is that a one-off or does it happen regularly, and to which branches?
-- When a till voids a sale, does it reuse the transaction ID or issue a new one, and does it send zero or a negative amount?
-- Do the snapshot feeds ever drop a record, and does anyone need to know when they do?
-- What does the connector actually expose? Nobody has asked.
