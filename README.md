@@ -128,24 +128,17 @@ small keeps the whole thing legible, and legibility is what makes review possibl
 
 ## The episodes
 
-| # | Title | Directory | Tag |
-|---|---|---|---|
-| 1 | Am I still a data engineer if Claude does the work? | `episodes/01-still-a-data-engineer/` | `ep01` |
-| 2 | My boss says be more "AI forward". What does that actually mean? | | `ep02` |
-| 3 | What is an "agent", actually, explained for people who already know SQL | | `ep03` |
-| 4 | The minimum viable agent: no LangChain, no MCP, no vector database | | `ep04` |
-| 5 | An LLM told me to build an MCP server. It didn't need one. | | `ep05` |
-| 6 | Running Claude on a schedule to check your data | | `ep06` |
-| 7 | Can Claude just read your dbt project? | | `ep07` |
-| 8 | You probably don't need a vector database, here's what to use instead | | `ep08` |
-| 9 | Do you actually need an MCP server? Here's when the answer is yes. | | `ep09` |
-| 10 | Why your dashboard's "Ask AI" button doesn't work | | `ep10` |
+| # | Title | Directory |
+|---|---|---|
+| 1 | Am I still a data engineer if Claude does the work? | `episodes/01-still-a-data-engineer/` |
 
-Every episode gets a tag at the exact state you see on screen, so you can check one out and follow
-along:
+Episodes 2 onward are being planned and will be listed here as each one ships.
+
+Every episode gets tags at the states you see on screen, so you can check one out and follow
+along. Episode 1's are listed in its own README:
 
 ```bash
-git checkout ep04
+git checkout ep01-baseline
 ```
 
 Diffing between two tags shows you what changed week to week. That's the reason this is one
@@ -157,23 +150,21 @@ Everything runs locally on DuckDB. No cloud warehouse account, no paid tooling, 
 signup wall. If an episode needs a model API key it says so up front, and it says what the run
 cost.
 
-Episode 1 is the one exception worth flagging. Its demos run against
-[Plumbline](https://github.com/snudurupati/plumbline), an open benchmark I'm building that measures
-how a text-to-SQL agent degrades when the warehouse changes underneath the documentation describing
-it. Plumbline is a separate project on its own schedule, so this repository pins a version of it
-rather than keeping a copy. That way episode 1 still reproduces later, even after the benchmark has
-moved on.
+Each episode directory has its own README with setup steps and pinned dependencies. Start there.
 
-## The failures are real
+If you want an agent to recreate an environment rather than doing it yourself, `AGENTS.md` at the
+root of this repository has the same instructions in a form agents read by convention.
 
-Every failure you see actually happened to me. Nothing is staged, the retries are left in, and the
-model name and date sit in the corner of every demo so you can judge how stale it's gotten.
+## Nothing is staged
 
-I'm strict about this for a selfish reason. A rigged failure is obvious inside ten seconds to
+What you see is what happened. The retries stay in, and the model name and run date sit in the
+corner of every demo so you can judge how stale it has become.
+
+I am strict about this for a selfish reason. Anything rigged is obvious inside ten seconds to
 anybody who has done this work, and the moment you spot one you stop believing anything else in the
 video.
 
-It's also the only honest way to teach the thing I'm actually trying to teach. You can't learn to
+It is also the only honest way to teach the thing I am actually trying to teach. You cannot learn to
 spot a plausible wrong answer from a demo where somebody planted the wrong answer for you.
 
 ## What it costs
