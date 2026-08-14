@@ -1,10 +1,9 @@
 # analytics
 
-**Read `CONVENTIONS.md` before writing anything.**
+**Read `CONVENTIONS.md` and `STANDARDS.md` before writing anything.**
 
-It covers what a nightly file means for each of the four source systems (they disagree), who owns
-each feed and what can be asked of them, the audit columns every table carries, why we never
-hard-delete, and the open questions nobody has answered yet.
+`CONVENTIONS.md` holds the business rules: what each feed is, who owns it, how the business treats corrections, deletions and reporting periods. Almost none of it is discoverable from the data.
 
-Almost none of it is discoverable from the data. Building without it produces models that run clean
-and are wrong.
+`STANDARDS.md` holds how we build: layers, required columns, grain, testing, definition of done.
+
+Building without them produces models that run clean and are wrong.
