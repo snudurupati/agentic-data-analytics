@@ -73,6 +73,27 @@ Anything needing product mix or customer attribution cannot come from this feed,
 
 ---
 
+## A period stays open for fourteen days
+
+Finance allows fourteen days after the date of a sale for corrections to arrive. A voided sale, a re-rung transaction, a price adjustment, a till that was reconciled late: all of it is expected inside that window.
+
+**On day fifteen the period closes.** The number is final. Anything arriving after that is not a normal correction, and it does not get applied quietly.
+
+This is a business rule. It is not visible anywhere in the data, and no amount of profiling produces it.
+
+### What it means for a load
+
+- **The last fourteen days are open, not just last night.** A load that only considers the newest file is wrong on any day a correction arrives for an earlier one.
+- **A row whose business date is more than fourteen days old is an exception.** Raise it. Do not apply it, and do not silently discard it either.
+- **Restating a closed period needs a person.** There is a reason a number was published, and changing it after the fact is a decision with an owner.
+- **Older than fourteen days does not need reprocessing.** A load has a bounded window, which is what makes the cost of a nightly run flat instead of growing with history.
+
+### Why the window matters more than it looks
+
+Without it, "load everything that might have changed" has no end, so either you reprocess all history every night or you pick an arbitrary cutoff and hope. The window is what makes the correct answer bounded.
+
+---
+
 ## Every table carries audit columns
 
 `inserted_ts` and `updated_ts`, full timestamp with timezone, written by us at load time.
@@ -182,7 +203,7 @@ A document that only records answers rots into confident wrongness. These have n
 each one changes a design decision.
 
 - When a branch goes silent for a night, is that a one-off or does it recur? Which branches?
-- Do voids happen at all? If they do, does the till reuse the transaction ID or issue a new one?
+- When a void happens, does the till reuse the transaction ID or issue a new one? Does it send zero or a negative amount?
 - Do the snapshot feeds ever drop a record, and if so, does anyone need to know?
 - What does the connector actually expose? Nobody has asked.
 - Is `transaction_id` unique across all eight branches, or only within one?
