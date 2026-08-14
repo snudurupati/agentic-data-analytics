@@ -35,7 +35,7 @@ already knows.
 
 ## Commit messages describe structure, never intent
 
-Write "Add POS transaction seed", not "add the seed that demonstrates late arrivals". Describe what
+Write "Add branch reference data", not "add the file that makes the join fail". Describe what
 changed structurally. Never describe what it is meant to teach, show or prove.
 
 The same applies to file comments, script headers and README prose.

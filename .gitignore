@@ -18,6 +18,10 @@ dbt_packages/
 logs/
 .user.yml
 
+# Experiment tooling and its output. Lives in the vault, not the repo.
+experiments/
+**/experiments/
+
 # Local model keys and config
 .env
 .env.*
@@ -25,10 +29,6 @@ logs/
 
 # Claude Code permission allowlists. Machine-local, not shared.
 .claude/settings.local.json
-
-# Raw output from experiment runs. Regenerated, and it piles up fast.
-experiments/runs/
-**/experiments/runs/
 
 # Recording and editing artifacts, kept out of git deliberately.
 # Video files belong in cloud storage, not in a repo viewers will clone.

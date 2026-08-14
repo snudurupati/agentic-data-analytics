@@ -1,26 +1,24 @@
 #!/usr/bin/env bash
 #
-# Put episode 1 back to ground zero and reload the seed data.
+# Return the project to a clean starting state.
 #
-#   ./reset.sh
+#   ./reset.sh              # uses ep01-baseline
+#   ./reset.sh <tag>        # uses any other tag
 #
-# Ground zero is the `ep01-baseline` tag: a dbt project, a profile, one seed
-# file, this script, and the experiments folder. No models, no tests. That is
-# the state Claude gets handed when a segment is rebuilt on camera.
+# Discards commits and uncommitted changes, drops the DuckDB file, and removes
+# anything copied into landing/. Prompts before doing any of it.
 #
-# This is a production tool, not part of the dbt project, which is why it lives
-# here and not inside analytics/.
+# WARNING: this runs `git reset --hard` on the branch you currently have checked
+# out. Check out the `baseline` branch first. Running it on `main` discards main.
 #
-# NOTE: this script is itself restored from the baseline tag, so if you move or
-# edit it, commit and re-tag before running it again. Otherwise the reset puts
-# the old copy back and deletes the new one.
+# This script is itself restored from the tag, so if you edit it, commit and
+# re-tag before running it again. Otherwise the reset puts the old copy back.
 #
-# Ignored files are left alone, so the virtual environment and experiment
-# output survive.
+# Ignored files are left alone, so the virtual environment survives.
 #
 set -euo pipefail
 
-BASELINE="ep01-baseline"
+BASELINE="${1:-ep01-baseline}"
 HERE="$(cd "$(dirname "$0")" && pwd)"
 REPO="$(git -C "$HERE" rev-parse --show-toplevel)"
 PROJECT="$HERE/analytics"
