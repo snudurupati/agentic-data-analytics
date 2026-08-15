@@ -1,8 +1,6 @@
 # Warehouse conventions
 
-Read this before you build anything. These are our standing rules. You cannot work most of them out from the data.
-
-We do not list columns here. Those live in the source YAML and would go stale in two places.
+These are standing business rules. Read this before building anything. 
 
 How we build is in `STANDARDS.md`.
 
@@ -18,7 +16,7 @@ How we build is in `STANDARDS.md`.
 
 ### How Deletions are handled
 
-In ERP a row arrives with `op = 'D'`.
+In ERP a deleted row arrives with `op = 'D'`.
 
 In snapshot feeds, a record only stops appearing when it has been deleted.
 
@@ -35,7 +33,7 @@ In snapshot feeds, a record only stops appearing when it has been deleted.
 
 The ingestion system stamps every row it delivers with `_ingested_at`, the time it pulled the batch. That is one value per sync, not per row. If we need more than the feed carries, we ask the ingestion team.
 
-Point of sale has no ingestion system. The tills write the file and push it, so those files carry no `_ingested_at`.
+Point of sale has no ingestion system. The tills write the file and push it, so those files carry no ingestion timestamp.
 
 POS feeds don't have an owner. Everything the tills write, `received_at` included, can change meaning without warning.
 
@@ -53,9 +51,11 @@ POS feeds don't have an owner. Everything the tills write, `received_at` include
 
 **Transaction IDs are not unique across branches.**
 
-**Refunds, returns and exchanges are new transactions.** Each one gets its own transaction ID and carries a negative amount. An exchange can carry a negative, zero or positive amount depending on what was swapped. They can happen days or weeks after the original sale, at a different branch, on a different till.
+**Refunds, returns and exchanges are new transactions.** Each one gets its own transaction ID and carries a negative amount. An exchange can carry a negative, zero or positive amount depending on what was swapped. They can happen upto 14 days after the original sale, at a different branch, on a different till.
 
 **Nothing in the feed links a refund back to the sale it reverses.** The till knows, the receipt knows, we do not.
+
+**A refund reduces revenue on the day it arrives**, not the day of the original sale. A published number is not reopened to net off a refund.
 
 **Voids behave differently from vendor to vendor.** A void happens before the sale settles, in the same shift. Some branches never send the original sale at all. Others send a zero-amount row reusing the original transaction ID.
 
@@ -74,6 +74,18 @@ Finance allows fourteen days after the date of a sale for corrections. Voided sa
 On day fifteen the period closes and the number is final. We have published it.
 
 Anything that turns up after that is an exception, not a correction.
+
+---
+
+## When a feed is late
+
+Last night's file is expected by 4am. A feed not received by then is late.
+
+Point of sale is counted per branch. A branch that sends nothing is late even when the other seven arrive on time.
+
+A late feed fails a test. It does not fail the job. Downstream work continues on whatever arrived.
+
+The failed test appears on the observability dashboard. Someone reviews it and tells the business unit.
 
 ---
 
@@ -97,7 +109,9 @@ We call three different things a date:
 
 - **When it happened.** `sale_datetime`, `order_datetime`. Business time.
 - **When the source recorded it.** `LastModifiedDate`, `updated_at`, `change_ts`.
-- **When we received it.** `received_at`, or the connector's arrival column.
+- **When we received it.** `_ingested_at`, written by the ingestion system.
+
+Point of sale has no arrival date. `received_at` sits in the file, but the till writes it, not us. It is one value per file and nobody owns the field.
 
 ---
 
