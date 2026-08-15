@@ -1,31 +1,31 @@
-customer_id,company_name,email_domain,contact_email,country,created_at,updated_at
-cus_8w02s8ro,Walker-Ryan,walker-ryan.com,donna@walker-ryan.com,US,2023-12-22T00:00:40Z,2023-12-22T00:00:40Z
-cus_1j6h27bb,Tran Ross and Martin,tranrossandmartin.com,jennifer@tranrossandmartin.com,US,2024-06-28T20:35:14Z,2024-06-28T20:35:14Z
-cus_d5h26wba,Reynolds-Davis,reynolds-davis.com,jeffery@reynolds-davis.com,US,2025-11-04T17:06:33Z,2025-11-04T17:06:33Z
-cus_435p1ljs,Pierce PLC,pierceplc.com,mandy@pierceplc.com,US,2025-03-04T18:18:06Z,2026-07-21T14:54:04Z
-cus_e6nngqym,Benjamin and,benjaminandsons.com,brittany@benjaminandsons.com,US,2023-03-14T23:31:35Z,2023-03-14T23:31:35Z
-cus_baz3k3nd,Mitchell PLC,mitchellplc.com,kimberly@mitchellplc.com,US,2022-07-25T02:06:10Z,2022-07-25T02:06:10Z
-cus_qlkb3j4a,Morales-Taylor,morales-taylor.com,brian@morales-taylor.com,US,2026-05-11T05:55:56Z,2026-07-21T10:28:04Z
-cus_b1gwtlik,Davis Jones,davisjonesandbird.com,zachary@davisjonesandbird.com,US,2025-01-25T19:02:33Z,2025-01-25T19:02:33Z
-cus_8qvz59fw,Adams Kane,adamskaneandsteven.com,stephanie@adamskaneandsteven.com,US,2026-03-07T00:21:13Z,2026-03-07T00:21:13Z
-cus_0e13i5x6,Mendoza PLC,mendozaplc.com,deborah@mendozaplc.com,US,2025-08-15T19:05:49Z,2025-08-15T19:05:49Z
-cus_5hr5f52y,Watkins-Hess,watkins-hess.com,audrey@watkins-hess.com,US,2022-08-23T04:27:16Z,2022-08-23T04:27:16Z
-cus_20q0645k,Gutierrez-Gonzalez,gutierrez-gonzalez.com,jeremy@gutierrez-gonzalez.com,US,2022-01-06T23:28:17Z,2022-01-06T23:28:17Z
-cus_wb6mfygu,Manning-Gonzales,manning-gonzales.com,emily@manning-gonzales.com,US,2022-11-11T19:05:12Z,2022-11-11T19:05:12Z
-cus_couwkn9c,Curtis Group,curtisgroup.com,sarah@curtisgroup.com,US,2026-05-08T07:44:38Z,2026-05-08T07:44:38Z
-cus_uazssyyy,Johnston-Bishop,johnston-bishop.com,daniel@johnston-bishop.com,US,2022-09-04T08:48:26Z,2022-09-04T08:48:26Z
-cus_zi64qrst,Carter-Smith,carter-smith.com,kent@carter-smith.com,US,2026-03-27T14:22:46Z,2026-03-27T14:22:46Z
-cus_yc8tknn1,Chase LLC,chasellc.com,bobby@chasellc.com,US,2025-06-14T20:23:37Z,2025-06-14T20:23:37Z
-cus_aiwl0u7y,Jones-Martinez,jones-martinez.com,kenneth@jones-martinez.com,US,2021-09-21T00:22:31Z,2021-09-21T00:22:31Z
-cus_r9hyw3rl,Thomas-Johnson,thomas-johnson.com,bryan@thomas-johnson.com,US,2025-06-25T07:04:55Z,2025-06-25T07:04:55Z
-cus_z9frmwyo,Hawkins Wilson and Miller,hawkinswilsonandmi.com,michael@hawkinswilsonandmi.com,US,2025-07-06T13:55:04Z,2026-07-21T11:50:04Z
-cus_tyzgnuzp,Jennings-Jacobs,jennings-jacobs.com,maureen@jennings-jacobs.com,US,2021-10-31T22:36:32Z,2021-10-31T22:36:32Z
-cus_29ado865,Duncan Group,duncangroup.com,nancy@duncangroup.com,US,2025-01-07T03:02:15Z,2025-01-07T03:02:15Z
-cus_q1m0s1se,Pena-Smith,pena-smith.com,katherine@pena-smith.com,US,2022-05-04T09:42:53Z,2022-05-04T09:42:53Z
-cus_vlmfnhmy,Phillips Bolton and Webb,phillipsboltonandw.com,michelle@phillipsboltonandw.com,US,2022-08-21T14:50:15Z,2022-08-21T14:50:15Z
-cus_ftr0vza6,Rodgers Johnson,rodgersjohnsonandg.com,donna@rodgersjohnsonandg.com,US,2024-12-31T16:42:22Z,2024-12-31T16:42:22Z
-cus_z7j5ia79,Jackson-Osborn,jackson-osborn.com,gail@jackson-osborn.com,US,2022-05-28T10:16:44Z,2022-05-28T10:16:44Z
-cus_u221neel,White Group,whitegroup.com,jack@whitegroup.com,US,2021-06-16T22:31:34Z,2021-06-16T22:31:34Z
-cus_y703oncc,Key Gomez,keygomezandharmon.com,rose@keygomezandharmon.com,US,2023-07-09T10:44:29Z,2023-07-09T10:44:29Z
-cus_8tybdatk,Sterling Fabrication Group,sterlingfabricatio.com,jeremy@sterlingfabricatio.com,US,2025-04-18T02:11:09Z,2025-04-18T02:11:09Z
-cus_key03f7m,Walker-Ryan,walker-ryan.com,lisa@walker-ryan.com,US,2026-07-21T14:22:09Z,2026-07-21T14:22:09Z
+customer_id,company_name,email_domain,contact_email,country,created_at,updated_at,_ingested_at
+cus_8w02s8ro,Walker-Ryan,walker-ryan.com,donna@walker-ryan.com,US,2023-12-22T00:00:40Z,2023-12-22T00:00:40Z,2026-07-22T06:15:00Z
+cus_1j6h27bb,Tran Ross and Martin,tranrossandmartin.com,jennifer@tranrossandmartin.com,US,2024-06-28T20:35:14Z,2024-06-28T20:35:14Z,2026-07-22T06:15:00Z
+cus_d5h26wba,Reynolds-Davis,reynolds-davis.com,jeffery@reynolds-davis.com,US,2025-11-04T17:06:33Z,2025-11-04T17:06:33Z,2026-07-22T06:15:00Z
+cus_435p1ljs,Pierce PLC,pierceplc.com,mandy@pierceplc.com,US,2025-03-04T18:18:06Z,2026-07-21T14:54:04Z,2026-07-22T06:15:00Z
+cus_e6nngqym,Benjamin and,benjaminandsons.com,brittany@benjaminandsons.com,US,2023-03-14T23:31:35Z,2023-03-14T23:31:35Z,2026-07-22T06:15:00Z
+cus_baz3k3nd,Mitchell PLC,mitchellplc.com,kimberly@mitchellplc.com,US,2022-07-25T02:06:10Z,2022-07-25T02:06:10Z,2026-07-22T06:15:00Z
+cus_qlkb3j4a,Morales-Taylor,morales-taylor.com,brian@morales-taylor.com,US,2026-05-11T05:55:56Z,2026-07-21T10:28:04Z,2026-07-22T06:15:00Z
+cus_b1gwtlik,Davis Jones,davisjonesandbird.com,zachary@davisjonesandbird.com,US,2025-01-25T19:02:33Z,2025-01-25T19:02:33Z,2026-07-22T06:15:00Z
+cus_8qvz59fw,Adams Kane,adamskaneandsteven.com,stephanie@adamskaneandsteven.com,US,2026-03-07T00:21:13Z,2026-03-07T00:21:13Z,2026-07-22T06:15:00Z
+cus_0e13i5x6,Mendoza PLC,mendozaplc.com,deborah@mendozaplc.com,US,2025-08-15T19:05:49Z,2025-08-15T19:05:49Z,2026-07-22T06:15:00Z
+cus_5hr5f52y,Watkins-Hess,watkins-hess.com,audrey@watkins-hess.com,US,2022-08-23T04:27:16Z,2022-08-23T04:27:16Z,2026-07-22T06:15:00Z
+cus_20q0645k,Gutierrez-Gonzalez,gutierrez-gonzalez.com,jeremy@gutierrez-gonzalez.com,US,2022-01-06T23:28:17Z,2022-01-06T23:28:17Z,2026-07-22T06:15:00Z
+cus_wb6mfygu,Manning-Gonzales,manning-gonzales.com,emily@manning-gonzales.com,US,2022-11-11T19:05:12Z,2022-11-11T19:05:12Z,2026-07-22T06:15:00Z
+cus_couwkn9c,Curtis Group,curtisgroup.com,sarah@curtisgroup.com,US,2026-05-08T07:44:38Z,2026-05-08T07:44:38Z,2026-07-22T06:15:00Z
+cus_uazssyyy,Johnston-Bishop,johnston-bishop.com,daniel@johnston-bishop.com,US,2022-09-04T08:48:26Z,2022-09-04T08:48:26Z,2026-07-22T06:15:00Z
+cus_zi64qrst,Carter-Smith,carter-smith.com,kent@carter-smith.com,US,2026-03-27T14:22:46Z,2026-03-27T14:22:46Z,2026-07-22T06:15:00Z
+cus_yc8tknn1,Chase LLC,chasellc.com,bobby@chasellc.com,US,2025-06-14T20:23:37Z,2025-06-14T20:23:37Z,2026-07-22T06:15:00Z
+cus_aiwl0u7y,Jones-Martinez,jones-martinez.com,kenneth@jones-martinez.com,US,2021-09-21T00:22:31Z,2021-09-21T00:22:31Z,2026-07-22T06:15:00Z
+cus_r9hyw3rl,Thomas-Johnson,thomas-johnson.com,bryan@thomas-johnson.com,US,2025-06-25T07:04:55Z,2025-06-25T07:04:55Z,2026-07-22T06:15:00Z
+cus_z9frmwyo,Hawkins Wilson and Miller,hawkinswilsonandmi.com,michael@hawkinswilsonandmi.com,US,2025-07-06T13:55:04Z,2026-07-21T11:50:04Z,2026-07-22T06:15:00Z
+cus_tyzgnuzp,Jennings-Jacobs,jennings-jacobs.com,maureen@jennings-jacobs.com,US,2021-10-31T22:36:32Z,2021-10-31T22:36:32Z,2026-07-22T06:15:00Z
+cus_29ado865,Duncan Group,duncangroup.com,nancy@duncangroup.com,US,2025-01-07T03:02:15Z,2025-01-07T03:02:15Z,2026-07-22T06:15:00Z
+cus_q1m0s1se,Pena-Smith,pena-smith.com,katherine@pena-smith.com,US,2022-05-04T09:42:53Z,2022-05-04T09:42:53Z,2026-07-22T06:15:00Z
+cus_vlmfnhmy,Phillips Bolton and Webb,phillipsboltonandw.com,michelle@phillipsboltonandw.com,US,2022-08-21T14:50:15Z,2022-08-21T14:50:15Z,2026-07-22T06:15:00Z
+cus_ftr0vza6,Rodgers Johnson,rodgersjohnsonandg.com,donna@rodgersjohnsonandg.com,US,2024-12-31T16:42:22Z,2024-12-31T16:42:22Z,2026-07-22T06:15:00Z
+cus_z7j5ia79,Jackson-Osborn,jackson-osborn.com,gail@jackson-osborn.com,US,2022-05-28T10:16:44Z,2022-05-28T10:16:44Z,2026-07-22T06:15:00Z
+cus_u221neel,White Group,whitegroup.com,jack@whitegroup.com,US,2021-06-16T22:31:34Z,2021-06-16T22:31:34Z,2026-07-22T06:15:00Z
+cus_y703oncc,Key Gomez,keygomezandharmon.com,rose@keygomezandharmon.com,US,2023-07-09T10:44:29Z,2023-07-09T10:44:29Z,2026-07-22T06:15:00Z
+cus_8tybdatk,Sterling Fabrication Group,sterlingfabricatio.com,jeremy@sterlingfabricatio.com,US,2025-04-18T02:11:09Z,2025-04-18T02:11:09Z,2026-07-22T06:15:00Z
+cus_key03f7m,Walker-Ryan,walker-ryan.com,lisa@walker-ryan.com,US,2026-07-21T14:22:09Z,2026-07-21T14:22:09Z,2026-07-22T06:15:00Z

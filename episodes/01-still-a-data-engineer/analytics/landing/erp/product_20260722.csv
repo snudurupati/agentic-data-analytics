@@ -1,6 +1,6 @@
-product_id,sku,product_name,category,uom,unit_cost,list_price,op,change_ts
-4016,FAS-1571,Issue Kit,Fasteners,EA,302.09,578.93,U,2026-07-21 03:50:12-05:00
-4010,ADH-1555,Authority Kit,Adhesives,EA,111.69,257.07,U,2026-07-21 18:55:01-05:00
-4032,ADH-9735,Follow Assembly,Adhesives,EA,283.84,553.99,U,2026-07-21 23:27:27-05:00
-4026,POW-3750,Election Set,Power Tools,EA,165.04,370.57,U,2026-07-21 19:01:51-05:00
-4046,ADH-4877,Already Kit,Adhesives,EA,123.52,256.64,U,2026-07-21 06:23:58-05:00
+product_id,sku,product_name,category,uom,unit_cost,list_price,op,change_ts,_ingested_at
+4016,FAS-1571,Issue Kit,Fasteners,EA,302.09,578.93,U,2026-07-21 03:50:12-05:00,2026-07-22T06:15:00Z
+4010,ADH-1555,Authority Kit,Adhesives,EA,111.69,257.07,U,2026-07-21 18:55:01-05:00,2026-07-22T06:15:00Z
+4032,ADH-9735,Follow Assembly,Adhesives,EA,283.84,553.99,U,2026-07-21 23:27:27-05:00,2026-07-22T06:15:00Z
+4026,POW-3750,Election Set,Power Tools,EA,165.04,370.57,U,2026-07-21 19:01:51-05:00,2026-07-22T06:15:00Z
+4046,ADH-4877,Already Kit,Adhesives,EA,123.52,256.64,U,2026-07-21 06:23:58-05:00,2026-07-22T06:15:00Z

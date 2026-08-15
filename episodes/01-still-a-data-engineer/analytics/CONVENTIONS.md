@@ -33,7 +33,9 @@ In snapshot feeds, a record only stops appearing when it has been deleted.
 | **E-commerce** (Shopify) | Managed connector | The same | Ingestion team |
 | **Point of sale** | Branch tills push a file to shared storage overnight | Nothing | *nobody* |
 
-The connectors send what is in the feed today. Fivetran stamps `_fivetran_synced`, Airbyte stamps `_airbyte_extracted_at`. If we need more than that, we ask the ingestion team.
+The ingestion system stamps every row it delivers with `_ingested_at`, the time it pulled the batch. That is one value per sync, not per row. If we need more than the feed carries, we ask the ingestion team.
+
+Point of sale has no ingestion system. The tills write the file and push it, so those files carry no `_ingested_at`.
 
 POS feeds don't have an owner. Everything the tills write, `received_at` included, can change meaning without warning.
 
@@ -58,6 +60,8 @@ POS feeds don't have an owner. Everything the tills write, `received_at` include
 **Voids behave differently from vendor to vendor.** A void happens before the sale settles, in the same shift. Some branches never send the original sale at all. Others send a zero-amount row reusing the original transaction ID.
 
 **We count the website as a branch.** Online sales sit alongside the physical branches, so "by branch" includes the web. It has no city, no timezone and no opening date, because there is no building.
+
+**This feed covers the physical tills only.** Web orders reach us through the ERP order feed. They never appear here.
 
 **Point of sale carries a total and an item count.** There is no line detail and no customer.
 
