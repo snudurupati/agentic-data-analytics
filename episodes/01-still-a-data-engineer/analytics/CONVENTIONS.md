@@ -57,6 +57,8 @@ POS feeds don't have an owner. Everything the tills write, `received_at` include
 
 **A refund reduces revenue on the day it arrives**, not the day of the original sale. A published number is not reopened to net off a refund.
 
+**A refund belongs to the branch that processed it**, not the branch that made the sale. We cannot tell which branch made the sale, and the money left the branch that handed it back.
+
 **Voids behave differently from vendor to vendor.** A void happens before the sale settles, in the same shift. Some branches never send the original sale at all. Others send a zero-amount row reusing the original transaction ID.
 
 **We count the website as a branch.** Online sales sit alongside the physical branches, so "by branch" includes the web. It has no city, no timezone and no opening date, because there is no building.
@@ -79,7 +81,7 @@ Anything that turns up after that is an exception, not a correction.
 
 ## When a feed is late
 
-Last night's file is expected by 4am. A feed not received by then is late.
+Last night's file is expected by 4am. A feed not received by then is late. The system that receives the file knows whether it arrived. The warehouse only knows what it loaded.
 
 Point of sale is counted per branch. A branch that sends nothing is late even when the other seven arrive on time.
 

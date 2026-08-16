@@ -10,10 +10,13 @@ These are BUILD Standards. The business rules themselves are in `CONVENTIONS.md`
 |---|---|---|
 | `landing/` | Files as they arrived. Immutable. | Nothing. Never edit a file in place. |
 | Sources | Declarations over those files | Nothing. No filtering, no collapsing. Keep a source diffable against what is on disk. |
-| Staging (`stg_`) | One model per source table | Rename, recast, collapse to current state, apply CDC operations, stamp audit columns |
+| Staging (`stg_`) | One model per source table | Rename, recast, stamp audit columns. Keep every row that differs from the row already held. |
 | Marts (`dim_`, `fct_`) | Business facing | Joins, business rules, deletion policy |
 
-A staging model maps to exactly one source table. So a staging model is at the grain of the source.
+A staging model reads exactly one source table. It keeps every row that differs from the row already held, and records when a record stops appearing. The comparison uses the columns the source system sends. It ignores the columns the ingestion system stamps, because those change on every sync whether the record changed or not. 
+A change feed only sends changes, so every row it sends is kept. A full dump resends everything every night, so only the rows that changed are kept.
+
+Staging never collapses to current state. Dimensions carry history as date-ranged rows and decide what current means.
 
 A source reads whatever is in the folder. An unexpected column, or a missing one, does not stop the read. Tests report the change.
 
@@ -37,6 +40,7 @@ Two underscores separate the system from the entity in a staging name, so you ca
 Columns:
 
 - A surrogate key is `<entity>_key`. A foreign key to a dimension keeps that dimension's key name.
+- A staging surrogate key is `stg_<entity>_key`. It identifies a row in staging, not a business entity, and a fact must never join to it.
 - A business key from the source keeps the source's own name.
 - Booleans start `is_` or `has_`.
 - Dates end `_date`. Timestamps end `_ts`.
