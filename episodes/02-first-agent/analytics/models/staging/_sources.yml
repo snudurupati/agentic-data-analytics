@@ -1,0 +1,274 @@
+version: 2
+
+# Sources: the three managed-connector systems that drop files into landing/.
+#
+# The point of sale feed is deliberately NOT in this file. It lives in
+# _sources_pos.yml because it arrives a different way and can be trusted a
+# different amount. See the header of that file for why.
+#
+# Every source below points at a glob (a wildcard path) rather than at one
+# named file, because a new file lands every night and nothing ever renames or
+# merges the old ones. Adding tomorrow's file to landing/ is the whole of
+# "loading" in this project. No dbt change is needed when it arrives.
+#
+# Two options are passed to DuckDB's read_csv on every source:
+#
+#   union_by_name = true   Match columns across files by name, not by position.
+#                          A source system that adds a column mid-week then
+#                          lands a wider file will not silently shift every
+#                          value one column to the left. Files missing a column
+#                          get null for it.
+#
+#   filename = true        Add a `filename` column holding the path each row
+#                          came from. Two of the four feeds need it to work out
+#                          which nightly batch a row belongs to. See below.
+#
+# THE THING TO KNOW BEFORE YOU BUILD ON THESE
+#
+# These systems do not all mean the same thing by "tonight's file", and the
+# difference decides whether you can select straight from a source or not:
+#
+#   crm, ecom     Full snapshot. Every file is the complete table as it looked
+#                 that night. Selecting from the glob counts each account once
+#                 per night it existed, so 41 accounts over two nights read as
+#                 82 rows. A staging model has to pick one snapshot, normally
+#                 the newest, using the `filename` column.
+#
+#   erp           Change feed, also called change data capture or CDC. The
+#                 first file is every row; each file after it holds only what
+#                 changed, with `op` saying how (I = insert, U = update,
+#                 D = delete) and `change_ts` saying when. Selecting from the
+#                 glob is correct as a history of changes, but a row that has
+#                 been updated twice appears three times. Current state means
+#                 taking the latest `change_ts` per key and dropping the Ds.
+#
+# Sources are deliberately left raw here. They return what actually landed,
+# duplicates and deleted rows included, so that anyone can compare a model
+# against the files on disk. Snapshot picking and change-feed collapsing belong
+# in the staging models that read these, not hidden inside a YAML file.
+#
+# Freshness expects a file every night. `dbt source freshness` warns at 36
+# hours and errors at 72. Note for the two snapshot feeds that freshness is
+# measured on the source system's own last-modified timestamp, not on when the
+# file landed, so a quiet night where a file arrives with nothing changed in it
+# still ages towards a warning.
+
+sources:
+  - name: crm
+    description: >
+      Customer relationship management system, the sales team's record of who
+      the customer is. Accounts are exported nightly as a full snapshot.
+    loaded_at_field: LastModifiedDate
+    freshness:
+      warn_after: {count: 36, period: hour}
+      error_after: {count: 72, period: hour}
+    tables:
+      - name: account
+        description: >
+          One row per account per nightly snapshot. Column names are the CRM's
+          own, which is why they are capitalised unlike every other source.
+        meta:
+          external_location: "read_csv('landing/crm/account_*.csv', union_by_name = true, filename = true)"
+        columns:
+          - name: Id
+            description: CRM account identifier. Unique within a snapshot, repeated across snapshots.
+          - name: Name
+            description: Account name as the sales team typed it. Not cleaned.
+          - name: Industry
+            description: Industry label chosen from a picklist. Editable, so it changes over time.
+          - name: BillingCity
+            description: Billing address city.
+          - name: BillingState
+            description: Billing address state, two-letter code.
+          - name: AccountSource
+            description: How the account was first acquired, for example Web or Trade Show.
+          - name: Owner
+            description: Name of the sales representative who owns the account. A name, not an identifier.
+          - name: LastModifiedDate
+            description: When the CRM last changed this row. Drives source freshness.
+          - name: filename
+            description: Path of the nightly file this row was read from.
+
+  - name: erp
+    description: >
+      Enterprise resource planning system, the system of record for orders,
+      products, branches, and the finance view of a customer. Delivered as a
+      change feed: one initial full extract, then nightly changes only.
+    loaded_at_field: change_ts
+    freshness:
+      warn_after: {count: 36, period: hour}
+      error_after: {count: 72, period: hour}
+    tables:
+      - name: customer
+        description: >
+          Finance's version of the customer, keyed by customer_number. Separate
+          from the CRM account and the e-commerce customer, with no shared key.
+        meta:
+          external_location: "read_csv('landing/erp/customer_*.csv', union_by_name = true, filename = true)"
+        columns:
+          - name: customer_number
+            description: ERP customer identifier. The key for the change feed, not unique across files.
+          - name: customer_name
+            description: Customer name. The ERP stores it uppercased.
+          - name: industry_code
+            description: Four-letter industry code, the ERP's own scheme.
+          - name: city
+            description: City, uppercased like the name.
+          - name: state
+            description: State, two-letter code.
+          - name: credit_limit
+            description: Credit limit in United States dollars.
+          - name: created_on
+            description: When the customer record was created in the ERP.
+          - name: updated_on
+            description: When the customer record was last updated in the ERP.
+          - name: op
+            description: "Change type: I inserted, U updated, D deleted."
+          - name: change_ts
+            description: When the change was captured. Use the latest per customer_number for current state.
+          - name: filename
+            description: Path of the nightly file this row was read from.
+
+      - name: branch
+        description: Physical branches. Small and slow moving, but still delivered as a change feed.
+        meta:
+          external_location: "read_csv('landing/erp/branch_*.csv', union_by_name = true, filename = true)"
+        columns:
+          - name: branch_id
+            description: Branch identifier, for example BR01. Joins to pos.transaction and erp.order_header.
+          - name: branch_name
+            description: Branch name.
+          - name: city
+            description: Branch city.
+          - name: state
+            description: Branch state, two-letter code.
+          - name: timezone
+            description: >
+              Olson timezone name for the branch, for example America/Chicago.
+              This is the only place the local time of a branch is recorded,
+              which matters because pos.transaction stamps sales in local time
+              with no offset attached.
+          - name: opened_date
+            description: Date the branch opened.
+          - name: op
+            description: "Change type: I inserted, U updated, D deleted."
+          - name: change_ts
+            description: When the change was captured.
+          - name: filename
+            description: Path of the nightly file this row was read from.
+
+      - name: product
+        description: Product master, one row per change to a product.
+        meta:
+          external_location: "read_csv('landing/erp/product_*.csv', union_by_name = true, filename = true)"
+        columns:
+          - name: product_id
+            description: Product identifier. Joins to erp.order_line.
+          - name: sku
+            description: Stock keeping unit, the human-readable product code.
+          - name: product_name
+            description: Product name.
+          - name: category
+            description: Product category, for example Power Tools.
+          - name: uom
+            description: Unit of measure, for example EA for each.
+          - name: unit_cost
+            description: Cost per unit in United States dollars. Changes over time, so it is a change feed column, not a fixed attribute.
+          - name: list_price
+            description: List price per unit in United States dollars. Also changes over time.
+          - name: op
+            description: "Change type: I inserted, U updated, D deleted."
+          - name: change_ts
+            description: When the change was captured.
+          - name: filename
+            description: Path of the nightly file this row was read from.
+
+      - name: order_header
+        description: One row per order, per change to that order. Orders move through statuses, so an order can appear several times.
+        meta:
+          external_location: "read_csv('landing/erp/order_header_*.csv', union_by_name = true, filename = true)"
+        columns:
+          - name: order_number
+            description: Order identifier. Joins to erp.order_line.
+          - name: customer_number
+            description: Ordering customer. Joins to erp.customer, not to the CRM or e-commerce customer.
+          - name: branch_id
+            description: Branch the order was placed through. Joins to erp.branch.
+          - name: order_datetime
+            description: When the order was placed.
+          - name: order_total
+            description: Order total in the currency given by the currency column.
+          - name: currency
+            description: Three-letter currency code.
+          - name: status
+            description: Order status at the time of the change, for example SHIPPED or INVOICED.
+          - name: op
+            description: "Change type: I inserted, U updated, D deleted."
+          - name: change_ts
+            description: When the change was captured.
+          - name: filename
+            description: Path of the nightly file this row was read from.
+
+      - name: order_line
+        description: Order lines. Keyed by order_number and line_number together, neither is unique alone.
+        meta:
+          external_location: "read_csv('landing/erp/order_line_*.csv', union_by_name = true, filename = true)"
+        columns:
+          - name: order_number
+            description: Parent order. Joins to erp.order_header.
+          - name: line_number
+            description: Line position within the order, starting at 1.
+          - name: product_id
+            description: Product on the line. Joins to erp.product.
+          - name: quantity
+            description: Units ordered.
+          - name: unit_price
+            description: Price per unit charged on this line, which can differ from the product list price.
+          - name: line_amount
+            description: >
+              Line total as the ERP calculated it. It currently reconciles to
+              quantity times unit_price exactly, on all 652 lines, and
+              order_header.order_total reconciles to the sum of its lines on
+              all 230 orders. Worth a test to find out the day that stops being
+              true, but there is no discrepancy to work around today.
+          - name: op
+            description: "Change type: I inserted, U updated, D deleted."
+          - name: change_ts
+            description: When the change was captured.
+          - name: filename
+            description: Path of the nightly file this row was read from.
+
+  - name: ecom
+    description: >
+      E-commerce platform, the self-service web storefront. Its customers are a
+      different population from the ERP's and are exported nightly as a full
+      snapshot.
+    loaded_at_field: updated_at
+    freshness:
+      warn_after: {count: 36, period: hour}
+      error_after: {count: 72, period: hour}
+    tables:
+      - name: customer
+        description: >
+          One row per web customer per nightly snapshot. Note the name collides
+          with erp.customer while meaning something different, so always
+          qualify the source when referring to either.
+        meta:
+          external_location: "read_csv('landing/ecom/customer_*.csv', union_by_name = true, filename = true)"
+        columns:
+          - name: customer_id
+            description: E-commerce customer identifier, for example cus_8w02s8ro. Unique within a snapshot.
+          - name: company_name
+            description: Company name as entered on the website.
+          - name: email_domain
+            description: Domain part of the contact email. Often the only usable link to a CRM account or an ERP customer.
+          - name: contact_email
+            description: Contact email address. Changes when the contact person changes.
+          - name: country
+            description: Two-letter country code.
+          - name: created_at
+            description: When the customer signed up.
+          - name: updated_at
+            description: When the customer record last changed. Drives source freshness.
+          - name: filename
+            description: Path of the nightly file this row was read from.
