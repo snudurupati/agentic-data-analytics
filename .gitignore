@@ -5,9 +5,6 @@ __pycache__/
 .mypy_cache/
 .ruff_cache/
 .pytest_cache/
-.demo-baseline/
-.demo-state.json
-
 # Generated databases and run output
 *.duckdb
 *.duckdb.wal

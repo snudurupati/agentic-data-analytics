@@ -2,83 +2,118 @@
 
 This episode is for data engineers and analytics engineers who already use SQL, Python, and dbt, but still copy code from a chatbot into their project by hand.
 
-The demo uses Codex on camera. The repository and task are not tied to Codex. The same task can be run with Claude Code, Gemini CLI, OpenCode, or another coding-agent harness that can read files, edit files, and run a terminal command.
+The recorded demo uses Codex in the ChatGPT desktop app. The repository and task are not tied to Codex. The same prompt can be used with Claude Code, Gemini CLI, OpenCode, or another coding-agent harness that can read files, edit files, and run terminal commands.
 
 ## What the words mean
 
 - A model is the reasoning engine that generates a response.
 - A chatbot gives the model a conversation interface. It normally returns text for you to copy.
-- A coding-agent harness connects a model to tools such as file reading, file editing, and terminal commands.
-- An agent is the model using those tools in a loop to complete a stated task and check the result.
+- A coding-agent harness connects a model to project files, editing tools, terminal commands, permissions, and Git.
+- An agent is the model using those tools in a loop to complete a task and check the result.
 - Orchestration coordinates multiple agents, tasks, or handoffs. It is not needed for this episode.
 
-## What you need
+## Prerequisites
 
+You need:
+
+- Git.
 - Python 3.12.
-- One coding-agent harness installed and signed in.
 - A terminal.
-- Git is optional. You can clone the repository with Git or download the repository as a ZIP file from GitHub.
+- One coding-agent harness installed and signed in.
 
-You need only one agent tool. Follow its official installation instructions because these commands change over time:
+The lesson assumes that you already know SQL, Python, and dbt. It explains every Git command it asks you to run.
 
-- Codex CLI: https://learn.chatgpt.com/docs/codex/cli
-- Claude Code: https://docs.anthropic.com/en/docs/claude-code/getting-started
-- Gemini CLI: https://geminicli.com/docs/
-- OpenCode: https://opencode.ai/docs/
+For the recorded path, install the ChatGPT desktop app and use Codex. Other supported examples are Claude Code, Gemini CLI, and OpenCode. Follow each tool's official installation instructions because they change over time.
 
-## 1. Get the project
+## Setup with an agent
 
-With Git:
+Episode 1 used an agent to prepare its own local environment. Episode 2 follows the same pattern. Open your agent in a directory where it may create the repository, then paste this prompt:
 
-```bash
-git clone https://github.com/snudurupati/agentic-data-analytics.git
-cd agentic-data-analytics/episodes/02-first-agent
+```text
+Clone https://github.com/snudurupati/agentic-data-analytics.git into a new
+directory called ada.
+
+Then read AGENTS.md at the repository root and
+episodes/02-first-agent/README.md, and follow them to build the environment
+for episode 2.
+
+Start from the ep02-baseline tag and create a new branch called ep02-demo.
+
+Build the environment with Python 3.12. If a virtual environment is already
+active, deactivate it first, and use an absolute path to the interpreter rather
+than whatever python3.12 resolves to on PATH, because an unrelated environment
+can shadow it. After creating the environment, confirm with
+.venv/bin/python --version that it really is Python 3.12. Then install exactly
+the pinned versions in requirements.txt.
+
+From the analytics directory, verify the environment with:
+
+../.venv/bin/dbt debug
+../.venv/bin/dbt build --select stg_pos__transactions
+
+Finally, run git status --short and tell me which branch I am on. Explain any
+status output. A clean setup should not change a tracked file.
+
+Set up the environment only. Do not fix the declared grain tests, do not write
+or modify a model, test, or macro, do not commit, and do not modify anything
+under landing/.
 ```
 
-Without Git, download the repository ZIP from GitHub, extract it, and open `episodes/02-first-agent` in a terminal.
+The final paragraph prevents the setup task from turning into the episode task.
 
-## 2. Build and verify the baseline
+## Setup by hand
 
-macOS or Linux:
+Clone the repository, create a working branch from the recorded baseline, and enter the episode directory:
 
 ```bash
-python3.12 scripts/setup_demo.py
+git clone https://github.com/snudurupati/agentic-data-analytics.git ada
+cd ada
+git switch -c ep02-demo ep02-baseline
+cd episodes/02-first-agent
 ```
 
-Windows PowerShell:
+`git switch -c ep02-demo ep02-baseline` creates a new branch named `ep02-demo` at the recorded starting point. Your work is isolated from `main`, and the baseline tag remains unchanged.
+
+Create the pinned Python environment on macOS or Linux:
+
+```bash
+/opt/homebrew/bin/python3.12 -m venv .venv
+.venv/bin/python --version
+source .venv/bin/activate
+python -m pip install -r requirements.txt
+```
+
+If Python 3.12 is somewhere else, use `which -a python3.12` to find its absolute path. The version command must report Python 3.12.
+
+On Windows PowerShell:
 
 ```powershell
-py -3.12 scripts/setup_demo.py
+py -3.12 -m venv .venv
+.venv\Scripts\python.exe --version
+.venv\Scripts\Activate.ps1
+python -m pip install -r requirements.txt
 ```
 
-The Windows path is designed to be equivalent but has not yet been verified on a Windows machine. The macOS clean-directory path was verified on 2026-08-28.
+The Windows commands have not yet been verified on a Windows machine.
 
-The setup script creates an isolated Python environment, installs the pinned dbt and DuckDB versions, proves that dbt can connect, runs the selected dbt build, and records a local snapshot for later review. It does not install an agent tool.
-
-The final message must say `Baseline ready.` before you continue.
-
-## 3. Start your coding agent
-
-Open the `analytics` directory first:
+Verify the baseline on macOS or Linux:
 
 ```bash
 cd analytics
+../.venv/bin/dbt debug
+../.venv/bin/dbt build --select stg_pos__transactions
+git status --short
 ```
 
-Then start one installed tool:
+The dbt build should finish with five passing checks. `git status --short` should print nothing because setup and dbt output are ignored by Git.
 
-```text
-Codex CLI    codex
-Claude Code  claude
-Gemini CLI   gemini
-OpenCode     opencode
-```
+## Run the task in the Codex app
 
-The tools use different permission controls. Before the task, confirm that the tool is working only in this project and that it will ask before any command you do not expect. Do not enable unrestricted or bypass-permission modes for this demo.
-
-## 4. Give the same task to any tool
-
-Paste this prompt exactly:
+1. Open the ChatGPT desktop app and select Codex.
+2. Open the local folder `ada/episodes/02-first-agent/analytics`.
+3. Use the local checkout for this demo so Codex works on the `ep02-demo` branch and uses the environment you just created.
+4. Keep the default project sandbox and approval controls. Do not grant access to unrelated folders or enable unrestricted execution.
+5. Paste the task below.
 
 ```text
 Read AGENTS.md, CONVENTIONS.md, and STANDARDS.md first.
@@ -100,67 +135,67 @@ Run dbt build only for stg_pos__transactions.
 Do not commit.
 ```
 
-The prompt names the shared instruction file directly, so it does not depend on whether a tool automatically reads `AGENTS.md`, `CLAUDE.md`, or `GEMINI.md`.
+The prompt names the shared instruction files directly, so it does not depend on which project-context filename a harness loads automatically.
 
-## 5. Review what changed
+## Run the same task in another harness
 
-Leave the agent, return to the Episode 2 directory, and run:
+Start the harness from the `analytics` directory and paste the same prompt:
 
-macOS or Linux:
+```text
+Claude Code  claude
+Gemini CLI   gemini
+OpenCode     opencode
+```
+
+Permission labels and user interfaces differ. Keep the project boundary, one-file task, same prompt, same Git review, and same dbt check.
+
+## Review what changed with Git
+
+From the `analytics` directory, run:
 
 ```bash
-cd ..
-.venv/bin/python scripts/demo.py review
+git status --short
+git diff -- models/staging/_staging.yml
 ```
 
-Windows PowerShell:
+The first command answers, "Which files changed?" In its short output, `M` means modified, `??` means a new untracked file, and `D` means deleted.
 
-```powershell
-cd ..
-.venv\Scripts\python scripts\demo.py review
-```
+The expected result is one modified file: `models/staging/_staging.yml`. Stop if another path appears.
 
-The review command prints the names of changed, added, and deleted files, then shows the exact line changes in `_staging.yml`. It works even when the project came from a ZIP file and has no Git history.
+The second command shows the exact lines removed and added. Check that both grain columns are required and that they are tested together for uniqueness.
 
-The expected result is one modified file. Stop if the agent changed, added, or deleted anything else.
+In the Codex app, the review pane shows the same Git-backed working-tree changes visually. Use it for inspection, but keep the terminal commands in the lesson because they work outside Codex too.
 
-## 6. Run the check yourself
+## Run the check yourself
 
-macOS or Linux:
+Still in the `analytics` directory, run:
 
 ```bash
-.venv/bin/python scripts/demo.py check
+../.venv/bin/dbt build --select stg_pos__transactions
 ```
 
-Windows PowerShell:
+This should finish with six passing checks. Run it yourself even if the agent already ran it. The agent's summary is not evidence.
 
-```powershell
-.venv\Scripts\python scripts\demo.py check
-```
+## Reset and repeat
 
-This independently runs `dbt build --select stg_pos__transactions`. The agent's summary is not the evidence. The command and its result are.
-
-## 7. Reset the demo
-
-macOS or Linux:
+Restore the one file this task allowed the agent to change:
 
 ```bash
-.venv/bin/python scripts/demo.py reset
+git restore models/staging/_staging.yml
+git status --short
 ```
 
-Windows PowerShell:
+The first command restores the file from the current branch. The second should print nothing.
 
-```powershell
-.venv\Scripts\python scripts\demo.py reset
-```
-
-The reset command restores only the file this demo allowed the agent to change and removes generated dbt output. It does not delete unexpected changes. If the review reports another changed file, inspect it or start again from a fresh clone or ZIP extraction.
+If `git status --short` reports another modified, deleted, or untracked file, inspect it. Do not use a broad cleanup command until you understand what it would remove. A fresh clone is always a safe restart.
 
 ## What makes this repeatable
 
+- The starting state is the immutable `ep02-baseline` Git tag.
+- Every viewer works on a separate `ep02-demo` branch.
 - Python, dbt, and DuckDB versions are pinned.
 - The warehouse runs locally with no cloud account.
-- The input files are committed and immutable.
-- The same prompt works across coding-agent harnesses.
-- Setup records a local before-state, so review does not require Git knowledge.
-- Review, verification, and reset are separate from the agent's own claims.
+- The input files are committed and treated as immutable.
+- The same task prompt works across coding-agent harnesses.
+- Git records the before-state, shows every change, and restores the permitted file.
+- The dbt check is run independently of the agent's final message.
