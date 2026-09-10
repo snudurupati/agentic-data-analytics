@@ -11,9 +11,8 @@ learning, so clarity beats cleverness.
 
 ## Working on a dbt project here
 
-**The dbt projects have their own instructions. Read them before writing anything.** Each one has a
-`CLAUDE.md` in its root pointing at the standards that apply, and those standards are not
-discoverable from the data. Building without them produces models that run clean and are wrong.
+**The dbt projects have their own instructions. Read them before writing anything.** Each one has an
+`AGENTS.md` in its root. Follow it, and any files it points to.
 
 ## Setting up an environment
 

@@ -13,9 +13,7 @@ already knows.
 ## Non-negotiables
 
 1. **Local first.** DuckDB, a script, a scheduler, a folder of markdown files. No framework enters
-   this repository until an episode explicitly argues that the problem earned it. Episodes 5 and 8
-   are entire arguments against premature frameworks, so importing LangChain for convenience in
-   episode 3 would be self-defeating.
+   this repository until an episode explicitly argues that the problem earned it.
 2. **Demos must reproduce on a clean machine.** No cloud warehouse account, no paid tooling, no
    signup wall. If an episode needs a model API key, its README says so and says what the run cost.
 3. **Nothing is rigged.** Whatever happens on camera is what happened. Retries stay in. Anything

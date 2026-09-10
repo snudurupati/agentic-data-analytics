@@ -1,0 +1,14 @@
+# Connection settings for this project.
+#
+# dbt normally writes this to ~/.dbt/profiles.yml, outside the repo, because at
+# a real company it holds warehouse credentials. There are none here. DuckDB is
+# a file on disk, so this lives in the project and gets committed. Anyone who
+# clones the repo can run it without setting anything up.
+
+analytics:                  # must match `profile:` in dbt_project.yml
+  target: dev               # which output below to use by default
+  outputs:
+    dev:
+      type: duckdb
+      path: analytics.duckdb   # the database file, created on first run
+      threads: 4
