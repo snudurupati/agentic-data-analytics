@@ -80,7 +80,8 @@ A clean setup reports Python 3.12, `All checks passed!`, and the branch `ep04-de
 
 ## Why the clone contains only one folder
 
-This repository holds every episode. git sparse-checkout writes only the Episode 4 folder to disk. The other episodes stay in Git history.
+This repository holds every episode. `git sparse-checkout` writes only the Episode 4 folder to
+disk. The other episodes stay in Git history.
 
 ## Run the build
 
