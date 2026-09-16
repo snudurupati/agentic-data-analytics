@@ -175,15 +175,32 @@ list before you read any SQL.
 
 ## Load the next batch of files
 
-`test-data/pos/` holds the next night of point-of-sale files. Copy them into the landing zone
-after the first build, then run the pipeline again:
+Nothing so far has proved the pipeline handles a delivery it has not already seen. Both nights of
+files were present before the first build ran.
+
+`test-data/pos/` holds the next night of point-of-sale files, held back for this. Copy them into
+the landing zone and run the pipeline again:
 
 ```bash
 cp ../test-data/pos/transaction_20260723*.csv landing/pos/
 ../.venv/bin/dbt build
 ```
 
-No model changes and no new prompt. The sources read the folder.
+No model is edited and no prompt is sent. That is the point.
+
+**Why it works without editing anything.** Each source reads its whole folder through a wildcard,
+so a new dated file is picked up on the next run with nothing to register. Each staging model is
+incremental: it loads only the files it has not loaded before, and appends the rows that differ
+from the rows already held. Running again with no new files adds nothing.
+
+**What this delivery contains.** It is one night from the tills, and it carries the cases
+`CONVENTIONS.md` describes: a refund as its own transaction with a negative amount, at the branch
+that processed it rather than the branch that made the sale; a void sent as a zero-amount row
+reusing a transaction id; the same transaction id issued by two different branches on the same
+night; and one branch pushing a second file behind its first.
+
+Check that the pipeline handled each of them. The row counts, the branch-day totals and the
+warning tests are where they show up.
 
 ## Reset and repeat
 
