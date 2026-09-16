@@ -78,7 +78,7 @@ The last paragraph stops the setup task from turning into the episode task.
 A clean setup reports Python 3.12, `All checks passed!`, and the branch `ep04-demo`.
 `git status --short` prints nothing.
 
-## One new Git command: sparse checkout
+## Why the clone contains only one folder
 
 This repository holds every episode. `git sparse-checkout` answers the question "which folders do
 I want in my working tree?" Only the Episode 4 folder is written to disk. The other episodes stay
@@ -168,13 +168,13 @@ Still in the `analytics` directory:
 Run it even though the agent already ran it. The agent's summary is not evidence. The dbt output
 is.
 
-## Read the last section of its report
+## Read what the agent decided on its own
 
 The build passing tells you the SQL ran. It does not tell you what the agent decided on your
 behalf. The report lists every rule it relied on that is not in the four documents. Read that
 list before you read any SQL.
 
-## The second delivery
+## Load the next night of files
 
 `test-data/pos/` holds the next night of point-of-sale files. Copy them into the landing zone
 after the first build, then run the pipeline again:
