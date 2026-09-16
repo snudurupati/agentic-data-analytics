@@ -10,7 +10,7 @@ The recorded demo uses Claude Code. The repository and the task are not tied to 
 prompts work with Codex, Gemini CLI, OpenCode, or another coding-agent harness that can read
 files, edit files, and run terminal commands.
 
-## The four documents
+## The four context documents
 
 Every document sits in the `analytics` directory. The agent reads all four. The prompt repeats
 none of them.
@@ -80,9 +80,7 @@ A clean setup reports Python 3.12, `All checks passed!`, and the branch `ep04-de
 
 ## Why the clone contains only one folder
 
-This repository holds every episode. `git sparse-checkout` answers the question "which folders do
-I want in my working tree?" Only the Episode 4 folder is written to disk. The other episodes stay
-in Git history.
+This repository holds every episode. `git sparse-checkout` clones only the Episode 4 folder to disk. The other episodes stay in Git history.
 
 ## Run the build
 
@@ -168,13 +166,13 @@ Still in the `analytics` directory:
 Run it even though the agent already ran it. The agent's summary is not evidence. The dbt output
 is.
 
-## Read what the agent decided on its own
+## Read the last section of the agent's report
 
 The build passing tells you the SQL ran. It does not tell you what the agent decided on your
 behalf. The report lists every rule it relied on that is not in the four documents. Read that
 list before you read any SQL.
 
-## Load the next night of files
+## Load the next batch of files
 
 `test-data/pos/` holds the next night of point-of-sale files. Copy them into the landing zone
 after the first build, then run the pipeline again:
