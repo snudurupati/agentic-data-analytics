@@ -155,6 +155,19 @@ Each episode directory has its own README with setup steps and pinned dependenci
 If you want an agent to recreate an environment rather than doing it yourself, `AGENTS.md` at the
 root of this repository has the same instructions in a form agents read by convention.
 
+## Where the sample data comes from
+
+The landing files in every episode are committed, so following a lesson needs nothing else.
+
+They were produced by two scripts in `tools/`, kept so the data can be rebuilt from source. The
+scripts are ordered: `generate_landing.py` writes the first two nights of deliveries from all four
+source systems, then `generate_pos_night3.py` writes a third night of point-of-sale files for
+Episode 4, reading the first two to continue their transaction numbering. Both are deterministic,
+so a rerun reproduces the committed files exactly. `tools/README.md` has the detail.
+
+`git sparse-checkout` does not write `tools/` into an episode clone, so following a lesson never
+puts those scripts on disk.
+
 ## Nothing is staged
 
 What you see is what happened. The retries stay in, and the model name and run date sit in the
