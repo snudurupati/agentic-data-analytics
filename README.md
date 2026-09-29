@@ -151,6 +151,8 @@ signup wall. If an episode needs a model API key it says so up front, and it say
 cost.
 
 Each episode directory has its own README with setup steps and pinned dependencies. Start there.
+Episode 5 also needs `tmux`, a system tool that `requirements.txt` cannot install. Its README
+says how to install it.
 
 If you want an agent to recreate an environment rather than doing it yourself, `AGENTS.md` at the
 root of this repository has the same instructions in a form agents read by convention.

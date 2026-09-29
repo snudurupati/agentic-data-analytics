@@ -33,8 +33,27 @@ You need:
 
 - Git.
 - Python 3.12.
-- A terminal, and `tmux` if you want each agent in its own pane.
+- A terminal.
+- `tmux`, installed as described below.
 - Claude Code, installed and signed in.
+
+### Install tmux
+
+`tmux` is a terminal multiplexer. It splits one terminal window into panes, and the agent team
+gives each teammate its own pane. It is a system tool, not a Python package, so
+`requirements.txt` does not install it.
+
+| System | Command |
+|---|---|
+| macOS, with Homebrew | `brew install tmux` |
+| Ubuntu or Debian | `sudo apt install tmux` |
+| Windows | Use WSL (Windows Subsystem for Linux), then the Ubuntu command |
+
+Check the install:
+
+```bash
+tmux -V
+```
 
 The lesson assumes that you already know SQL and dbt. It explains every Git command it asks you
 to run.
@@ -97,13 +116,29 @@ What it prints is what the agents said to each other. It is not their reasoning.
 
 ## Start the team
 
-In the first terminal, start `tmux`, then Claude Code with agent teams switched on:
+In the first terminal, run these three commands one at a time.
+
+Start a `tmux` session named `ep05`:
 
 ```bash
 tmux new -s ep05
+```
+
+Move into the dbt project:
+
+```bash
 cd ada-ep05/episodes/05-agent-teams/analytics
+```
+
+Start Claude Code with agent teams switched on:
+
+```bash
 CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1 claude --teammate-mode tmux
 ```
+
+`CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1` switches on agent teams for this one session. They are
+off by default. `--teammate-mode tmux` gives each teammate its own `tmux` pane, so every agent's
+work is visible at once.
 
 Check that a team folder exists before you paste anything. In a third terminal:
 
