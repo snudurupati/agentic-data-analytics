@@ -1,0 +1,205 @@
+version: 2
+
+# Intermediate models. They sit between staging and the reports: each one does one job
+# (pick the latest version, look up a cost, sum per day) so the reports stay short.
+# Every test here is on grain or keys, so every test is severity error.
+
+models:
+  - name: int_order_headers_current
+    description: >
+      One row per order_number. The latest version of each ERP (Enterprise Resource Planning)
+      order header, chosen by the latest change_ts. Deleted orders are kept with is_deleted true.
+    data_tests:
+      - unique_combination_of_columns:
+          arguments:
+            combination_of_columns: [order_number]
+    columns:
+      - name: order_key
+        description: Surrogate key, a hash of order_number.
+      - name: order_number
+        description: ERP order business key.
+        data_tests: [not_null]
+      - name: customer_number
+        description: ERP customer who placed the order.
+      - name: branch_id
+        description: Branch that booked the order. WEB for the website.
+      - name: order_ts
+        description: When the order was placed, as a timestamp with time zone.
+      - name: source_order_date
+        description: The order date as the ERP recorded it, in its own offset, with no conversion.
+      - name: order_total_amount
+        description: Order total in the order currency.
+      - name: currency
+        description: Currency code of the order.
+      - name: status
+        description: Order status from ERP.
+      - name: is_deleted
+        description: True when the latest version is a delete (op D).
+      - name: last_change_ts
+        description: change_ts of the version kept.
+      - name: inserted_ts
+        description: Audit column. When this row was written by the build.
+      - name: updated_ts
+        description: Audit column. When this row was last written by the build.
+
+  - name: int_order_lines_current
+    description: >
+      One row per order_number per line_number. The latest version of each ERP order line,
+      chosen by the latest change_ts. Deleted lines are kept with is_deleted true.
+    data_tests:
+      - unique_combination_of_columns:
+          arguments:
+            combination_of_columns: [order_number, line_number]
+    columns:
+      - name: order_line_key
+        description: Surrogate key, a hash of order_number and line_number.
+      - name: order_number
+        description: ERP order the line belongs to.
+        data_tests: [not_null]
+      - name: line_number
+        description: Line number within the order.
+        data_tests: [not_null]
+      - name: product_id
+        description: ERP product sold on the line.
+      - name: quantity
+        description: Number of units sold.
+      - name: unit_price_amount
+        description: Price of one unit.
+      - name: line_amount
+        description: Line value, as sent by ERP.
+      - name: is_deleted
+        description: True when the latest version is a delete (op D).
+      - name: last_change_ts
+        description: change_ts of the version kept.
+      - name: inserted_ts
+        description: Audit column. When this row was written by the build.
+      - name: updated_ts
+        description: Audit column. When this row was last written by the build.
+
+  - name: int_order_lines_costed
+    description: >
+      One row per order_number per line_number. Each current order line with the product
+      unit cost that applied at the order's order_ts, taken from the dim_product version valid
+      at that time. When no version was valid (the order is older than the product's first
+      change_ts), unit_cost_amount and cost_amount are null and is_cost_unknown is true. A later
+      cost is never used for an earlier sale. Also carries the order date, branch and customer
+      from the header.
+    data_tests:
+      - unique_combination_of_columns:
+          arguments:
+            combination_of_columns: [order_number, line_number]
+    columns:
+      - name: order_line_key
+        description: Surrogate key, a hash of order_number and line_number.
+      - name: order_number
+        description: ERP order the line belongs to.
+        data_tests: [not_null]
+      - name: line_number
+        description: Line number within the order.
+        data_tests: [not_null]
+      - name: product_id
+        description: ERP product sold on the line.
+      - name: product_key
+        description: dim_product version valid at order_ts. Null when none was valid.
+      - name: quantity
+        description: Number of units sold.
+      - name: unit_price_amount
+        description: Price of one unit.
+      - name: line_amount
+        description: Line value, as sent by ERP.
+      - name: unit_cost_amount
+        description: Product unit cost that applied at order_ts. Null when unknown.
+      - name: cost_amount
+        description: quantity times unit_cost_amount. Null when the unit cost is unknown.
+      - name: is_cost_unknown
+        description: True when no product version was valid at order_ts, so the cost is unknown.
+      - name: order_ts
+        description: When the order was placed, from the header.
+      - name: source_order_date
+        description: The order date as the ERP recorded it, from the header.
+      - name: branch_id
+        description: Branch that booked the order, from the header.
+      - name: customer_number
+        description: ERP customer who placed the order, from the header.
+      - name: is_deleted
+        description: True when the line's latest version is a delete (op D).
+      - name: inserted_ts
+        description: Audit column. When this row was written by the build.
+      - name: updated_ts
+        description: Audit column. When this row was last written by the build.
+
+  - name: int_pos_sales_by_branch_day
+    description: >
+      One row per branch_id per sale_date, only where the branch sent at least one till row for
+      that date. POS (point of sale) till rows summed per branch per local sale date. Every
+      version of a transaction is summed; repeated_transaction_row_count says how many rows
+      belong to a transaction that has more than one version, because which version counts
+      has not been decided.
+    data_tests:
+      - unique_combination_of_columns:
+          arguments:
+            combination_of_columns: [branch_id, sale_date]
+    columns:
+      - name: pos_branch_day_key
+        description: Surrogate key, a hash of branch_id and sale_date.
+      - name: branch_id
+        description: The branch whose till wrote the rows.
+        data_tests: [not_null]
+      - name: sale_date
+        description: The branch local calendar date of the sale.
+        data_tests: [not_null]
+      - name: sale_amount
+        description: Sum of sale_amount. Refunds are negative, so they reduce it.
+      - name: cost_amount
+        description: Sum of cost_amount.
+      - name: transaction_count
+        description: Number of till rows.
+      - name: item_count
+        description: Sum of item_count.
+      - name: repeated_transaction_row_count
+        description: Rows that belong to a (branch_id, transaction_id) with more than one version.
+      - name: inserted_ts
+        description: Audit column. When this row was written by the build.
+      - name: updated_ts
+        description: Audit column. When this row was last written by the build.
+
+  - name: int_order_sales_by_branch_day
+    description: >
+      One row per branch_id per source_order_date, only where the branch booked at least one
+      order that day. ERP orders summed per branch per order date. Revenue is the sum of order
+      header totals, so each order counts once. Item count and known cost come from the lines;
+      lines with an unknown cost are counted in uncosted_line_count. Deleted orders and lines are
+      included and counted.
+    data_tests:
+      - unique_combination_of_columns:
+          arguments:
+            combination_of_columns: [branch_id, source_order_date]
+    columns:
+      - name: order_branch_day_key
+        description: Surrogate key, a hash of branch_id and source_order_date.
+      - name: branch_id
+        description: Branch that booked the orders. WEB for the website.
+        data_tests: [not_null]
+      - name: source_order_date
+        description: The order date as the ERP recorded it.
+        data_tests: [not_null]
+      - name: order_total_amount
+        description: Sum of order_total_amount over the orders.
+      - name: order_count
+        description: Number of orders.
+      - name: deleted_order_count
+        description: Number of orders whose latest version is a delete.
+      - name: item_count
+        description: Sum of line quantity.
+      - name: known_cost_amount
+        description: Sum of cost_amount over the lines whose cost is known.
+      - name: line_count
+        description: Number of order lines.
+      - name: uncosted_line_count
+        description: Number of order lines whose cost is unknown.
+      - name: deleted_line_count
+        description: Number of order lines whose latest version is a delete.
+      - name: inserted_ts
+        description: Audit column. When this row was written by the build.
+      - name: updated_ts
+        description: Audit column. When this row was last written by the build.

@@ -1,0 +1,51 @@
+# Source declaration for the POS (point of sale) feed.
+#
+# The branch tills push a file to shared storage overnight. There is no ingestion system, so
+# the files carry no _ingested_at column. Every column is read as text, exactly as it sits on
+# disk; stg_pos__transactions does the casting.
+
+version: 2
+
+sources:
+  - name: pos
+    description: >
+      Point of sale files pushed by the branch tills overnight, one file per night covering
+      every branch that sent sales. Nobody owns this feed, so nothing about its layout or
+      meaning can be requested or guaranteed.
+    tables:
+      - name: transaction
+        description: >
+          Every row in landing/pos/transaction_*.csv. One row per line in a file, with no
+          filtering or collapsing. New sales and any corrections, as the tills wrote them.
+        config:
+          meta:
+            external_location: "read_csv('landing/pos/transaction_*.csv', filename = true, union_by_name = true, all_varchar = true)"
+        data_tests:
+          - source_columns_match:
+              arguments:
+                expected_columns:
+                  - transaction_id
+                  - branch_id
+                  - sale_datetime
+                  - received_at
+                  - sale_amount
+                  - cost_amount
+                  - item_count
+                  - filename
+        columns:
+          - name: transaction_id
+            description: Transaction ID numbered by the till. Not unique across branches.
+          - name: branch_id
+            description: The branch whose till wrote the row.
+          - name: sale_datetime
+            description: Branch local time of the sale, with no time zone.
+          - name: received_at
+            description: A time the till writes into the file, one value per file. Written by the till, owned by nobody.
+          - name: sale_amount
+            description: Sale total. Negative for a refund or return.
+          - name: cost_amount
+            description: Cost of the goods in the sale.
+          - name: item_count
+            description: Number of items in the sale.
+          - name: filename
+            description: Path of the file the row was read from, added by the read.

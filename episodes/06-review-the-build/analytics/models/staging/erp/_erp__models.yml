@@ -1,0 +1,268 @@
+version: 2
+
+# Staging models for the ERP (Enterprise Resource Planning) change feed.
+# Every model keeps every row the CDC (change data capture) feed sends, so a business key has one
+# row per change. The grain of each model is its business key plus change_ts.
+
+models:
+  - name: stg_erp__branches
+    description: >
+      One row per branch_id per change_ts. Every change to a branch is kept, including the WEB
+      branch, which stands for the website. The current state of a branch is not chosen here.
+    data_tests:
+      - unique_combination_of_columns:
+          arguments:
+            combination_of_columns: [branch_id, change_ts]
+    columns:
+      - name: stg_branch_key
+        description: Staging surrogate key, a hash of branch_id and change_ts. Identifies a row in staging only; never join a fact to it.
+      - name: branch_id
+        description: Branch business key from ERP, for example BR01 or WEB.
+        data_tests: [not_null]
+      - name: branch_name
+        description: Branch name.
+      - name: city
+        description: City of the branch building.
+      - name: state
+        description: State of the branch building.
+      - name: timezone
+        description: IANA (Internet Assigned Numbers Authority) time zone name of the branch, for example America/Chicago.
+      - name: opened_date
+        description: Date the branch opened.
+      - name: op
+        description: Change type from the feed. I is insert, U is update, D is delete.
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: [I, U, D]
+      - name: is_deleted
+        description: True when the row is a delete (op is D).
+      - name: change_ts
+        description: When the source system recorded the change, as a timestamp with time zone.
+        data_tests: [not_null]
+      - name: ingested_ts
+        description: When the ingestion system pulled the batch. One value per sync, not per row.
+      - name: source_file_name
+        description: Path of the landing file the row was read from.
+      - name: inserted_ts
+        description: Audit column. When this row was written by the build.
+      - name: updated_ts
+        description: Audit column. When this row was last written by the build.
+
+  - name: stg_erp__customers
+    description: >
+      One row per customer_number per change_ts. Every change to an ERP customer is kept,
+      including deletes. The current state of a customer is not chosen here.
+    data_tests:
+      - unique_combination_of_columns:
+          arguments:
+            combination_of_columns: [customer_number, change_ts]
+    columns:
+      - name: stg_customer_key
+        description: Staging surrogate key, a hash of customer_number and change_ts. Identifies a row in staging only; never join a fact to it.
+      - name: customer_number
+        description: ERP customer business key. It is not shared with the CRM or e-commerce customer keys.
+        data_tests: [not_null]
+      - name: customer_name
+        description: Customer name as ERP spells it.
+      - name: industry_code
+        description: Industry code from ERP, for example MANU or RETA.
+      - name: city
+        description: Customer city.
+      - name: state
+        description: Customer state.
+      - name: credit_limit_amount
+        description: Credit limit in US dollars.
+      - name: source_created_ts
+        description: When ERP created the customer record (source created_on).
+      - name: source_updated_ts
+        description: When ERP last updated the customer record (source updated_on).
+      - name: op
+        description: Change type from the feed. I is insert, U is update, D is delete.
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: [I, U, D]
+      - name: is_deleted
+        description: True when the row is a delete (op is D).
+      - name: change_ts
+        description: When the source system recorded the change, as a timestamp with time zone.
+        data_tests: [not_null]
+      - name: ingested_ts
+        description: When the ingestion system pulled the batch. One value per sync, not per row.
+      - name: source_file_name
+        description: Path of the landing file the row was read from.
+      - name: inserted_ts
+        description: Audit column. When this row was written by the build.
+      - name: updated_ts
+        description: Audit column. When this row was last written by the build.
+
+  - name: stg_erp__products
+    description: >
+      One row per product_id per change_ts. Every change to a product is kept, so each cost change
+      is a separate row. The current state of a product is not chosen here.
+    data_tests:
+      - unique_combination_of_columns:
+          arguments:
+            combination_of_columns: [product_id, change_ts]
+    columns:
+      - name: stg_product_key
+        description: Staging surrogate key, a hash of product_id and change_ts. Identifies a row in staging only; never join a fact to it.
+      - name: product_id
+        description: ERP product business key.
+        data_tests: [not_null]
+      - name: sku
+        description: SKU (stock keeping unit) code of the product.
+      - name: product_name
+        description: Product name.
+      - name: category
+        description: Product category, for example Power Tools.
+      - name: unit_of_measure
+        description: Unit the product is sold in, for example EA (each). Source column uom.
+      - name: unit_cost_amount
+        description: Cost of one unit in US dollars, as of change_ts. Source column unit_cost.
+      - name: list_price_amount
+        description: List price of one unit in US dollars, as of change_ts. Source column list_price.
+      - name: op
+        description: Change type from the feed. I is insert, U is update, D is delete.
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: [I, U, D]
+      - name: is_deleted
+        description: True when the row is a delete (op is D).
+      - name: change_ts
+        description: When the source system recorded the change, as a timestamp with time zone.
+        data_tests: [not_null]
+      - name: ingested_ts
+        description: When the ingestion system pulled the batch. One value per sync, not per row.
+      - name: source_file_name
+        description: Path of the landing file the row was read from.
+      - name: inserted_ts
+        description: Audit column. When this row was written by the build.
+      - name: updated_ts
+        description: Audit column. When this row was last written by the build.
+
+  - name: stg_erp__order_headers
+    description: >
+      One row per order_number per change_ts. Every change to an order header is kept. Web orders
+      arrive here with branch_id WEB.
+    data_tests:
+      - unique_combination_of_columns:
+          arguments:
+            combination_of_columns: [order_number, change_ts]
+    columns:
+      - name: stg_order_header_key
+        description: Staging surrogate key, a hash of order_number and change_ts. Identifies a row in staging only; never join a fact to it.
+      - name: order_number
+        description: ERP order business key.
+        data_tests: [not_null]
+      - name: customer_number
+        description: ERP customer who placed the order.
+        data_tests:
+          - relationships:
+              arguments:
+                to: ref('stg_erp__customers')
+                field: customer_number
+      - name: branch_id
+        description: Branch that booked the order. WEB for the website.
+        data_tests:
+          - relationships:
+              arguments:
+                to: ref('stg_erp__branches')
+                field: branch_id
+      - name: order_ts
+        description: When the order was placed (business time), as a timestamp with time zone. Source column order_datetime.
+      - name: source_order_date
+        description: >
+          The order date as the ERP recorded it, taken from the text of order_datetime in the
+          source's own offset, with no time zone conversion. Which time zone defines the business
+          date of an order is an open business decision.
+        data_tests: [not_null]
+      - name: order_total_amount
+        description: Order total in the order currency. Source column order_total.
+      - name: currency
+        description: Currency code of the order amounts.
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: [USD]
+      - name: status
+        description: Order status from ERP.
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: [OPEN, SHIPPED, INVOICED]
+      - name: op
+        description: Change type from the feed. I is insert, U is update, D is delete.
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: [I, U, D]
+      - name: is_deleted
+        description: True when the row is a delete (op is D).
+      - name: change_ts
+        description: When the source system recorded the change, as a timestamp with time zone.
+        data_tests: [not_null]
+      - name: ingested_ts
+        description: When the ingestion system pulled the batch. One value per sync, not per row.
+      - name: source_file_name
+        description: Path of the landing file the row was read from.
+      - name: inserted_ts
+        description: Audit column. When this row was written by the build.
+      - name: updated_ts
+        description: Audit column. When this row was last written by the build.
+
+  - name: stg_erp__order_lines
+    description: >
+      One row per order_number, line_number and change_ts. Every change to an order line is kept.
+    data_tests:
+      - unique_combination_of_columns:
+          arguments:
+            combination_of_columns: [order_number, line_number, change_ts]
+    columns:
+      - name: stg_order_line_key
+        description: Staging surrogate key, a hash of order_number, line_number and change_ts. Identifies a row in staging only; never join a fact to it.
+      - name: order_number
+        description: ERP order the line belongs to.
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('stg_erp__order_headers')
+                field: order_number
+      - name: line_number
+        description: Line number within the order.
+        data_tests: [not_null]
+      - name: product_id
+        description: ERP product sold on the line.
+        data_tests:
+          - relationships:
+              arguments:
+                to: ref('stg_erp__products')
+                field: product_id
+      - name: quantity
+        description: Number of units sold on the line.
+      - name: unit_price_amount
+        description: Price of one unit in the order currency. Source column unit_price.
+      - name: line_amount
+        description: Line value in the order currency, as sent by ERP.
+      - name: op
+        description: Change type from the feed. I is insert, U is update, D is delete.
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: [I, U, D]
+      - name: is_deleted
+        description: True when the row is a delete (op is D).
+      - name: change_ts
+        description: When the source system recorded the change, as a timestamp with time zone.
+        data_tests: [not_null]
+      - name: ingested_ts
+        description: When the ingestion system pulled the batch. One value per sync, not per row.
+      - name: source_file_name
+        description: Path of the landing file the row was read from.
+      - name: inserted_ts
+        description: Audit column. When this row was written by the build.
+      - name: updated_ts
+        description: Audit column. When this row was last written by the build.

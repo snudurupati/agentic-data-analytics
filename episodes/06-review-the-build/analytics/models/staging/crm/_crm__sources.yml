@@ -1,0 +1,31 @@
+version: 2
+
+sources:
+  - name: crm
+    description: >
+      CRM (Customer Relationship Management) feed from Salesforce, delivered by the ingestion
+      team's managed connector. Each nightly delivery is a full dump of the table: every account
+      that exists, whether it changed or not.
+    tables:
+      - name: account
+        description: >
+          Every file in landing/crm matching account_*.csv, read as text. The ingestion system
+          stamps each row with _ingested_at (one value per sync). The filename column is added by
+          the read and records which file each row came from.
+        config:
+          meta:
+            external_location: "read_csv('landing/crm/account_*.csv', filename = true, union_by_name = true, all_varchar = true)"
+        data_tests:
+          - source_columns_match:
+              arguments:
+                expected_columns:
+                  - Id
+                  - Name
+                  - Industry
+                  - BillingCity
+                  - BillingState
+                  - AccountSource
+                  - Owner
+                  - LastModifiedDate
+                  - _ingested_at
+                  - filename
