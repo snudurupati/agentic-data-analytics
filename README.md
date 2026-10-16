@@ -76,11 +76,11 @@ resonated most was The Agentic Data Engineer. But there's a ceiling on what a bl
 no matter how many screenshots and numbered steps I stuff into it. Some things you only get by
 watching somebody do them, including the parts where it doesn't work the first time.
 
-So this is that. Longform, hands on, 10 to 14 minutes an episode. A written companion goes up the
-same day at [nudurupati.co](https://www.nudurupati.co).
+So this is that. Longform and hands on, 10 to 15 minutes an episode, with written companions at
+[nudurupati.co](https://www.nudurupati.co).
 
-> **Season 1 is complete.** Six episodes, each with its own directory and tag below. Episodes 1 to 5
-> have a video. Episode 6 has no video; its directory and tag stand on their own.
+> **Season 1 is complete.** Six episodes, each with its own directory and tag, listed below.
+> Episodes 1 to 5 have a video. Episode 6 has no video; its README and tag stand on their own.
 
 ## Who this is for
 
@@ -97,8 +97,8 @@ this isn't aimed at you and you'll find it slow.
 
 ## What it covers
 
-All seven stages of the analytics stack, because the context an agent needs is scattered across all
-of them and the failure looks different at each one:
+The series aims at all seven stages of the analytics stack, because the context an agent needs is
+scattered across all of them and the failure looks different at each one:
 
 1. Data integration
 2. Transformation and modeling
@@ -110,6 +110,9 @@ of them and the failure looks different at each one:
 
 An agent can write a perfectly clean incremental load and still pick the wrong grain three stages
 later. The number the business gets is wrong either way, and nothing in between raised its hand.
+
+Season 1 covers the first, second and fourth: landing files from four source systems, through
+staging, to the marts the business reads, on dbt and DuckDB. The other stages are not covered yet.
 
 ## What we actually build
 
@@ -130,14 +133,14 @@ small keeps the whole thing legible, and legibility is what makes review possibl
 
 Season 1: an AI-assisted modern data stack.
 
-| # | What it covers | Directory | Start at tag |
-|---|---|---|---|
-| 1 | Am I still a data engineer if Claude does the work? | `episodes/01-still-a-data-engineer/` | `ep01-baseline` |
-| 2 | Give an agent one bounded task in a dbt project, and review what it changed | `episodes/02-first-agent/` | `ep02-baseline` |
-| 3 | The context documents an agent needs: business rules and build standards | `episodes/03-project-context/` | `ep03-baseline`, `ep03-baseline-context` |
-| 4 | One agent builds the warehouse from the landing files to the marts | `episodes/04-full-build/` | `ep04-baseline` |
-| 5 | An agent team builds the same warehouse, with every message between agents logged | `episodes/05-agent-teams/` | `ep05-baseline` |
-| 6 | Review the Episode 5 build: test the tests, and leave business decisions to the business (no video) | `episodes/06-review-the-build/` | `ep06-baseline` |
+| # | What it covers | Video | Directory | Start at tag |
+|---|---|---|---|---|
+| 1 | Am I still a data engineer if Claude does the work? | [watch](https://youtu.be/NygDalOra34) | `episodes/01-still-a-data-engineer/` | `ep01-baseline` |
+| 2 | Give an agent one bounded task in a dbt project, and review what it changed | [watch](https://youtu.be/OetKrVpByKw) | `episodes/02-first-agent/` | `ep02-baseline` |
+| 3 | The context documents an agent needs: business rules and build standards | [watch](https://youtu.be/WV7ZYC3gYOc) | `episodes/03-project-context/` | `ep03-baseline`, `ep03-baseline-context` |
+| 4 | One agent builds the warehouse from the landing files to the marts | [watch](https://youtu.be/g_mDDsdYVvA) | `episodes/04-full-build/` | `ep04-baseline` |
+| 5 | An agent team builds the same warehouse, with every message between agents logged | [watch](https://youtu.be/S8J4Z9RiUqQ) | `episodes/05-agent-teams/` | `ep05-baseline` |
+| 6 | Review the Episode 5 build: test the tests, and leave business decisions to the business | none, README only | `episodes/06-review-the-build/` | `ep06-baseline` |
 
 Every episode gets tags at the states you see on screen, so you can check one out and follow
 along. Each episode's README names its tags. For example:
@@ -147,7 +150,7 @@ git checkout ep01-baseline
 ```
 
 Diffing between two tags shows you what changed week to week. That's the reason this is one
-repository instead of ten.
+repository instead of six.
 
 ## Running the demos yourself
 
@@ -157,7 +160,7 @@ cost.
 
 Each episode directory has its own README with setup steps and pinned dependencies. Start there.
 Episode 5 also needs `tmux`, a system tool that `requirements.txt` cannot install. Its README
-says how to install it.
+says how to install it. Episode 6 also uses the DuckDB command line.
 
 If you want an agent to recreate an environment rather than doing it yourself, `AGENTS.md` at the
 root of this repository has the same instructions in a form agents read by convention.
@@ -189,8 +192,10 @@ spot a plausible wrong answer from a demo where somebody planted the wrong answe
 
 ## What it costs
 
-Every episode says what it cost to run. Most of the time that's nothing, because most of it runs on
-your laptop.
+Every episode says what it cost to run. The warehouse costs nothing, because it runs on your
+laptop. The agent runs do cost money. The videos state what each run cost, and Episode 6 states it
+in its README. For scale, an Episode 5 agent team build on Claude Opus 5.5 cost about 4 to 6
+dollars.
 
 ## What this is not
 
