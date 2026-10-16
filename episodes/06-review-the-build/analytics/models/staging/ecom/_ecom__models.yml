@@ -1,0 +1,81 @@
+version: 2
+
+models:
+  - name: stg_ecom__customers
+    description: >
+      E-commerce (Shopify) customers, one row per customer_id per snapshot in which that customer
+      changed. A snapshot is one nightly delivery, identified by ingested_ts. A row is held the
+      first time a customer appears, when any column the source sends differs from the row held
+      before it, when the customer is absent from the next snapshot (is_deleted = true), and when
+      it comes back after being marked deleted. Unchanged rows from later snapshots are not held.
+      The model does not collapse to current state.
+    data_tests:
+      - unique_combination_of_columns:
+          arguments:
+            combination_of_columns: [customer_id, ingested_ts]
+          config:
+            severity: error
+    columns:
+      - name: stg_customer_key
+        description: >
+          Staging surrogate key, a hash of customer_id and ingested_ts. It identifies a row in
+          staging, not a customer. A fact must never join to it.
+      - name: customer_id
+        description: Business key from the e-commerce system, kept under the source's own name. Part of the grain.
+        data_tests:
+          - not_null:
+              config:
+                severity: error
+      - name: company_name
+        description: Company name as the e-commerce system spells it.
+      - name: email_domain
+        description: >
+          Email domain the e-commerce system holds for the customer. CONVENTIONS.md calls it
+          unreliable for matching customers across systems. No matching is done here.
+      - name: contact_email
+        description: Contact email address for the customer.
+      - name: country
+        description: Country code as sent by the source.
+      - name: source_created_ts
+        description: >
+          When the e-commerce system created the record (source column created_at), as a timestamp
+          with time zone.
+      - name: source_updated_ts
+        description: >
+          When the e-commerce system last changed the record (source column updated_at), as a
+          timestamp with time zone. Named with a source_ prefix so it does not collide with the
+          updated_ts audit column.
+      - name: is_deleted
+        description: >
+          True on the row added for a snapshot in which the customer stopped appearing. That row
+          carries the last values held for the customer. False on every row the source delivered.
+        data_tests:
+          - not_null:
+              config:
+                severity: error
+          - accepted_values:
+              arguments:
+                values: [true, false]
+                quote: false
+              config:
+                severity: error
+      - name: ingested_ts
+        description: >
+          When the ingestion system pulled the snapshot (source column _ingested_at), one value
+          per nightly sync. Part of the grain.
+        data_tests:
+          - not_null:
+              config:
+                severity: error
+      - name: source_file_name
+        description: >
+          The landing file the row was read from. On an is_deleted row, the file of the snapshot
+          the customer is missing from.
+        data_tests:
+          - not_null:
+              config:
+                severity: error
+      - name: inserted_ts
+        description: Audit column. Time of the run that built the row.
+      - name: updated_ts
+        description: Audit column. Time of the run that built the row.

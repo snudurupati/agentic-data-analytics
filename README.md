@@ -79,8 +79,8 @@ watching somebody do them, including the parts where it doesn't work the first t
 So this is that. Longform, hands on, 10 to 14 minutes an episode. A written companion goes up the
 same day at [nudurupati.co](https://www.nudurupati.co).
 
-> **Nothing has published yet.** Episodes 1 through 4 are being recorded before episode 1 goes out.
-> Directories appear here as each one ships.
+> **Season 1 is complete.** Six episodes, each with its own directory and tag below. Episodes 1 to 5
+> have a video. Episode 6 has no video; its directory and tag stand on their own.
 
 ## Who this is for
 
@@ -128,14 +128,19 @@ small keeps the whole thing legible, and legibility is what makes review possibl
 
 ## The episodes
 
-| # | Title | Directory |
-|---|---|---|
-| 1 | Am I still a data engineer if Claude does the work? | `episodes/01-still-a-data-engineer/` |
+Season 1: an AI-assisted modern data stack.
 
-Episodes 2 onward are being planned and will be listed here as each one ships.
+| # | What it covers | Directory | Start at tag |
+|---|---|---|---|
+| 1 | Am I still a data engineer if Claude does the work? | `episodes/01-still-a-data-engineer/` | `ep01-baseline` |
+| 2 | Give an agent one bounded task in a dbt project, and review what it changed | `episodes/02-first-agent/` | `ep02-baseline` |
+| 3 | The context documents an agent needs: business rules and build standards | `episodes/03-project-context/` | `ep03-baseline`, `ep03-baseline-context` |
+| 4 | One agent builds the warehouse from the landing files to the marts | `episodes/04-full-build/` | `ep04-baseline` |
+| 5 | An agent team builds the same warehouse, with every message between agents logged | `episodes/05-agent-teams/` | `ep05-baseline` |
+| 6 | Review the Episode 5 build: test the tests, and leave business decisions to the business (no video) | `episodes/06-review-the-build/` | `ep06-baseline` |
 
 Every episode gets tags at the states you see on screen, so you can check one out and follow
-along. Episode 1's are listed in its own README:
+along. Each episode's README names its tags. For example:
 
 ```bash
 git checkout ep01-baseline

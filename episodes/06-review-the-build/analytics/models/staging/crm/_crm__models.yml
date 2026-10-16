@@ -1,0 +1,71 @@
+version: 2
+
+models:
+  - name: stg_crm__accounts
+    description: >
+      Salesforce accounts from the CRM (Customer Relationship Management) full table dump.
+      Grain: one row per account (id) per snapshot (ingested_ts) in which the account first
+      appeared, changed any column Salesforce sent, was found missing, or came back after being
+      found missing. A snapshot is one value of _ingested_at. Unchanged rows from later dumps
+      are not kept. When an account present in one snapshot is missing from the next, a row is
+      added in that next snapshot with is_deleted = true, carrying the last values held.
+      The model does not collapse to current state and does not match accounts to customers
+      in any other system.
+    data_tests:
+      - unique_combination_of_columns:
+          arguments:
+            combination_of_columns: [id, ingested_ts]
+    columns:
+      - name: stg_account_key
+        description: >
+          Staging surrogate key, a hash of id and ingested_ts. It identifies a row in this
+          model, not an account. A fact must never join to it.
+        data_tests:
+          - not_null
+          - unique
+      - name: id
+        description: >
+          Salesforce account Id, the business key. It keeps the source name, lower-cased from
+          Id to id.
+        data_tests:
+          - not_null
+      - name: name
+        description: Account name, from Name.
+      - name: industry
+        description: Industry, from Industry.
+      - name: billing_city
+        description: Billing city, from BillingCity.
+      - name: billing_state
+        description: Billing state, from BillingState.
+      - name: account_source
+        description: How the account was acquired, from AccountSource.
+      - name: owner
+        description: Name of the account owner, from Owner.
+      - name: last_modified_ts
+        description: >
+          When Salesforce last recorded a change to the account, from LastModifiedDate, as a
+          timestamp with time zone. This is the source's record time, not the time we
+          received the row.
+      - name: is_deleted
+        description: >
+          True on a row added because the account was missing from this snapshot after being
+          present in the one before. The source-sent columns on that row carry the last values
+          held. False on every row the source sent.
+        data_tests:
+          - not_null
+      - name: ingested_ts
+        description: >
+          When the ingestion system pulled the snapshot, from _ingested_at, as a timestamp with
+          time zone. On a deletion row it is the snapshot in which the account was missing.
+        data_tests:
+          - not_null
+      - name: source_file_name
+        description: >
+          The landing file the row came from. On a deletion row it is the file of the snapshot
+          in which the account was missing.
+        data_tests:
+          - not_null
+      - name: inserted_ts
+        description: Audit column, the time the run that built this row started.
+      - name: updated_ts
+        description: Audit column, the time the run that built this row started.

@@ -1,0 +1,377 @@
+version: 2
+
+# Dimensions and reports. Tests on grain, keys and accepted values are severity error.
+# Singular tests in tests/marts/ that flag incoming data needing a business decision are
+# severity warn; each one says why in its header.
+
+models:
+
+  # Dimensions. Each carries history as date-ranged rows from the ERP (Enterprise Resource
+  # Planning) change feed. A version is valid from valid_from_ts up to, but not including,
+  # valid_to_ts. The first version starts at the first change_ts and is not back-filled.
+
+  - name: dim_branch
+    description: >
+      One row per branch_id per valid_from_ts: one version of a branch for each change the ERP
+      change feed sent. Used to find the branch details that applied on the date of an event.
+      The website is a branch (WEB). A delete is a version of its own with is_deleted true.
+      Nothing before the first change_ts of a branch is known, so no version covers that time.
+    data_tests:
+      - unique_combination_of_columns:
+          arguments:
+            combination_of_columns: [branch_id, valid_from_ts]
+    columns:
+      - name: branch_key
+        description: Surrogate key, a hash of branch_id and valid_from_ts.
+        data_tests: [unique, not_null]
+      - name: branch_id
+        description: Branch business key from ERP, for example BR01 or WEB.
+        data_tests: [not_null]
+      - name: branch_name
+        description: Branch name during this version.
+      - name: city
+        description: City of the branch building.
+      - name: state
+        description: State of the branch building.
+      - name: timezone
+        description: IANA (Internet Assigned Numbers Authority) time zone name of the branch.
+      - name: opened_date
+        description: Date the branch opened.
+      - name: valid_from_ts
+        description: When this version began, the change_ts of the change that created it.
+        data_tests: [not_null]
+      - name: valid_to_ts
+        description: When this version ended, the change_ts of the next change. Null for the latest version.
+      - name: is_current
+        description: True for the latest version of the branch.
+      - name: is_deleted
+        description: True when this version is a delete (op D).
+      - name: inserted_ts
+        description: Audit column. When this row was written by the build.
+      - name: updated_ts
+        description: Audit column. When this row was last written by the build.
+
+  - name: dim_product
+    description: >
+      One row per product_id per valid_from_ts: one version of a product for each change the
+      ERP change feed sent. Used to find the product details, including the unit cost, that
+      applied on the date of a sale. A delete is a version of its own with is_deleted true.
+      Nothing before the first change_ts of a product is known, so no version covers that time.
+    data_tests:
+      - unique_combination_of_columns:
+          arguments:
+            combination_of_columns: [product_id, valid_from_ts]
+    columns:
+      - name: product_key
+        description: Surrogate key, a hash of product_id and valid_from_ts.
+        data_tests: [unique, not_null]
+      - name: product_id
+        description: ERP product business key.
+        data_tests: [not_null]
+      - name: sku
+        description: SKU (stock keeping unit) code.
+      - name: product_name
+        description: Product name during this version.
+      - name: category
+        description: Product category.
+      - name: unit_of_measure
+        description: Unit the product is sold in, for example EA (each).
+      - name: unit_cost_amount
+        description: Cost of one unit in US dollars during this version.
+      - name: list_price_amount
+        description: List price of one unit in US dollars during this version.
+      - name: valid_from_ts
+        description: When this version began, the change_ts of the change that created it.
+        data_tests: [not_null]
+      - name: valid_to_ts
+        description: When this version ended, the change_ts of the next change. Null for the latest version.
+      - name: is_current
+        description: True for the latest version of the product.
+      - name: is_deleted
+        description: True when this version is a delete (op D).
+      - name: inserted_ts
+        description: Audit column. When this row was written by the build.
+      - name: updated_ts
+        description: Audit column. When this row was last written by the build.
+
+  - name: dim_customer
+    description: >
+      One row per customer_number per valid_from_ts: one version of an ERP customer for each
+      change the ERP change feed sent. ERP customers only; CRM (Customer Relationship
+      Management) and e-commerce customers are not matched or joined, because REQUIREMENTS.md
+      forbids it until the sales manager approves a matching rule. A delete is a version of its
+      own with is_deleted true, and earlier versions stay. Nothing before the first change_ts of
+      a customer is known, so no version covers that time.
+    data_tests:
+      - unique_combination_of_columns:
+          arguments:
+            combination_of_columns: [customer_number, valid_from_ts]
+    columns:
+      - name: customer_key
+        description: Surrogate key, a hash of customer_number and valid_from_ts.
+        data_tests: [unique, not_null]
+      - name: customer_number
+        description: ERP customer business key. Not shared with CRM or e-commerce.
+        data_tests: [not_null]
+      - name: customer_name
+        description: Customer name as ERP spells it, during this version.
+      - name: industry_code
+        description: Industry code from ERP.
+      - name: city
+        description: Customer city.
+      - name: state
+        description: Customer state.
+      - name: credit_limit_amount
+        description: Credit limit in US dollars.
+      - name: source_created_ts
+        description: When ERP created the customer record.
+      - name: source_updated_ts
+        description: When ERP last updated the customer record, as of this version.
+      - name: valid_from_ts
+        description: When this version began, the change_ts of the change that created it.
+        data_tests: [not_null]
+      - name: valid_to_ts
+        description: When this version ended, the change_ts of the next change. Null for the latest version.
+      - name: is_current
+        description: True for the latest version of the customer.
+      - name: is_deleted
+        description: True when this version is a delete (op D).
+      - name: inserted_ts
+        description: Audit column. When this row was written by the build.
+      - name: updated_ts
+        description: Audit column. When this row was last written by the build.
+
+  # Reports named in REQUIREMENTS.md.
+
+  - name: fct_order
+    description: >
+      Order values report. One row per ERP order (order_number), from the latest version of
+      the order header. Gives the sales manager order value by customer and by branch; each
+      order's value is stated once. order_date is provisional: it is the date as the ERP
+      recorded it, in the ERP's own time zone offset, and which time zone defines the business
+      date of an order is an open business decision. branch_key and customer_key point at the
+      dimension version valid at order_ts, and are null when none was (orders older than the
+      change feed). Deleted orders are kept with is_deleted true. The period it covers is the
+      range of order_date in the table.
+    data_tests:
+      - unique_combination_of_columns:
+          arguments:
+            combination_of_columns: [order_number]
+    columns:
+      - name: order_key
+        description: Surrogate key, a hash of order_number.
+        data_tests: [unique, not_null]
+      - name: order_number
+        description: ERP order business key.
+        data_tests: [not_null]
+      - name: order_date
+        description: >
+          Provisional business date of the order: the calendar date as the ERP recorded it, in
+          its own offset, with no conversion. The time zone that defines it is undecided.
+        data_tests: [not_null]
+      - name: order_ts
+        description: When the order was placed, as a timestamp with time zone.
+      - name: branch_id
+        description: Branch that booked the order. WEB for the website.
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_branch')
+                field: branch_id
+      - name: branch_key
+        description: dim_branch version valid at order_ts. Null when none was valid.
+        data_tests:
+          - relationships:
+              arguments:
+                to: ref('dim_branch')
+                field: branch_key
+      - name: customer_number
+        description: ERP customer who placed the order.
+        data_tests:
+          - relationships:
+              arguments:
+                to: ref('dim_customer')
+                field: customer_number
+      - name: customer_key
+        description: dim_customer version valid at order_ts. Null when none was valid.
+        data_tests:
+          - relationships:
+              arguments:
+                to: ref('dim_customer')
+                field: customer_key
+      - name: status
+        description: Order status from ERP.
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: [OPEN, SHIPPED, INVOICED]
+      - name: currency
+        description: Currency code of the order amounts.
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: [USD]
+      - name: order_total_amount
+        description: Order total in the order currency, from the order header.
+        data_tests: [not_null]
+      - name: line_count
+        description: Number of current lines on the order, deleted lines included.
+      - name: is_deleted
+        description: True when the latest version of the order is a delete (op D).
+      - name: inserted_ts
+        description: Audit column. When this row was written by the build.
+      - name: updated_ts
+        description: Audit column. When this row was last written by the build.
+
+  - name: fct_order_line
+    description: >
+      Order line values report. One row per ERP order line (order_number and line_number), from
+      the latest version of each line. Gives the sales manager order value by product.
+      unit_cost_amount is the product cost that applied when the order was placed, and
+      cost_amount is quantity times that cost; both are null when that cost is unknown (the
+      order is older than the product's first change_ts). A later cost is never used for an
+      earlier sale. order_date is provisional, as in fct_order. Deleted lines are kept with
+      is_deleted true.
+    data_tests:
+      - unique_combination_of_columns:
+          arguments:
+            combination_of_columns: [order_number, line_number]
+    columns:
+      - name: order_line_key
+        description: Surrogate key, a hash of order_number and line_number.
+        data_tests: [unique, not_null]
+      - name: order_number
+        description: ERP order the line belongs to.
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('fct_order')
+                field: order_number
+      - name: line_number
+        description: Line number within the order.
+        data_tests: [not_null]
+      - name: order_date
+        description: Provisional business date of the order, from fct_order.
+      - name: order_ts
+        description: When the order was placed.
+      - name: branch_id
+        description: Branch that booked the order.
+      - name: customer_number
+        description: ERP customer who placed the order.
+      - name: product_id
+        description: ERP product sold on the line.
+        data_tests:
+          - relationships:
+              arguments:
+                to: ref('dim_product')
+                field: product_id
+      - name: product_key
+        description: dim_product version valid at order_ts. Null when none was valid.
+        data_tests:
+          - relationships:
+              arguments:
+                to: ref('dim_product')
+                field: product_key
+      - name: quantity
+        description: Number of units sold.
+      - name: unit_price_amount
+        description: Price of one unit in the order currency.
+      - name: line_amount
+        description: Line value in the order currency, as sent by ERP.
+        data_tests: [not_null]
+      - name: unit_cost_amount
+        description: Product unit cost that applied at order_ts. Null when unknown.
+      - name: cost_amount
+        description: quantity times unit_cost_amount. Null when the unit cost is unknown.
+      - name: is_deleted
+        description: True when the latest version of the line is a delete (op D).
+      - name: inserted_ts
+        description: Audit column. When this row was written by the build.
+      - name: updated_ts
+        description: Audit column. When this row was last written by the build.
+
+  - name: fct_daily_branch_sales
+    description: >
+      Daily branch sales report for the branch operations manager. One row per branch_id per
+      sale_date. A row exists only where the branch had at least one till sale or one order
+      that day; a day with no activity has no row. It adds POS (point of sale) till sales,
+      dated by the branch's local sale date, to ERP orders, dated by fct_order.order_date
+      (provisional). REQUIREMENTS.md says the two never contain the same sale. The website is
+      the branch WEB and has orders only. Each total is published with the parts it is made of.
+      cost_amount and margin_amount are null when any order line that day has an unknown cost,
+      so a partial cost is never shown as complete. Every total is null when the day holds a
+      deleted order or line, or a till transaction with more than one version, because those
+      rules are undecided; the count columns say how many rows are affected. The period each
+      row covers is its sale_date; period_close_date and is_period_closed say whether that
+      period has closed. No rates are published.
+    data_tests:
+      - unique_combination_of_columns:
+          arguments:
+            combination_of_columns: [branch_id, sale_date]
+    columns:
+      - name: daily_branch_sales_key
+        description: Surrogate key, a hash of branch_id and sale_date.
+        data_tests: [unique, not_null]
+      - name: branch_id
+        description: Branch, including WEB for the website.
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_branch')
+                field: branch_id
+      - name: sale_date
+        description: >
+          The day of the sales. For till sales, the branch local date of the sale. For orders,
+          the provisional order_date from fct_order.
+        data_tests: [not_null]
+      - name: revenue_amount
+        description: pos_revenue_amount plus order_revenue_amount. Null when the day holds undecided rows.
+      - name: cost_amount
+        description: >
+          pos_cost_amount plus known_order_cost_amount. Null when any order line that day has an
+          unknown cost, or when the day holds undecided rows.
+      - name: margin_amount
+        description: revenue_amount minus cost_amount. Null when either is null.
+      - name: transaction_count
+        description: pos_transaction_count plus order_count. Null when the day holds undecided rows.
+      - name: item_count
+        description: pos_item_count plus order_item_count. Null when the day holds undecided rows.
+      - name: pos_revenue_amount
+        description: Sum of till sale_amount. Refunds are negative, so they reduce it.
+      - name: order_revenue_amount
+        description: Sum of order_total_amount over the orders dated that day. Each order counted once.
+      - name: pos_cost_amount
+        description: Sum of till cost_amount.
+      - name: known_order_cost_amount
+        description: Sum of order line cost_amount over the lines whose cost is known. Not the full order cost when uncosted_order_line_count is above 0.
+      - name: pos_transaction_count
+        description: Number of till rows.
+      - name: order_count
+        description: Number of orders.
+      - name: pos_item_count
+        description: Sum of till item_count.
+      - name: order_item_count
+        description: Sum of order line quantity.
+      - name: order_line_count
+        description: Number of order lines.
+      - name: uncosted_order_line_count
+        description: Number of order lines whose cost at the time of the order is unknown.
+      - name: deleted_order_count
+        description: Number of orders whose latest version is a delete.
+      - name: deleted_order_line_count
+        description: Number of order lines whose latest version is a delete.
+      - name: pos_repeated_transaction_row_count
+        description: Number of till rows that belong to a (branch_id, transaction_id) with more than one version.
+      - name: period_close_date
+        description: sale_date plus 14 days, the last day corrections are expected (CONVENTIONS.md).
+        data_tests: [not_null]
+      - name: is_period_closed
+        description: True when the build date (current_date when the model was built) is after period_close_date.
+        data_tests: [not_null]
+      - name: inserted_ts
+        description: Audit column. When this row was written by the build.
+      - name: updated_ts
+        description: Audit column. When this row was last written by the build.

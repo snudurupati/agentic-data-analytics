@@ -1,0 +1,29 @@
+version: 2
+
+sources:
+  - name: ecom
+    description: >
+      E-commerce (Shopify) data, delivered by the ingestion team's managed connector as a full
+      table dump each night. Every column is read as text; staging does the casting.
+    tables:
+      - name: customer
+        description: >
+          Every customer the e-commerce system holds, resent in full each night. One file per
+          night in landing/ecom. The ingestion system adds _ingested_at, one value per sync.
+          The filename column is added by the read and holds the file each row came from.
+        config:
+          meta:
+            external_location: "read_csv('landing/ecom/customer_*.csv', filename = true, union_by_name = true, all_varchar = true)"
+        data_tests:
+          - source_columns_match:
+              arguments:
+                expected_columns:
+                  - customer_id
+                  - company_name
+                  - email_domain
+                  - contact_email
+                  - country
+                  - created_at
+                  - updated_at
+                  - _ingested_at
+                  - filename

@@ -1,0 +1,74 @@
+version: 2
+
+models:
+  - name: stg_pos__transactions
+    description: >
+      Grain: one row per distinct version of a till transaction, that is one row per
+      branch_id, transaction_id and combination of values the till sent for it
+      (sale_local_ts, received_ts, sale_amount, cost_amount, item_count).
+      Every row in the POS (point of sale) files is kept unless an identical row is already
+      held for the same (branch_id, transaction_id). A transaction ID can repeat within a
+      branch when a till resends it with different values (a correction, or a zero-amount void
+      reusing the original ID); each version is a separate row, and nothing here decides which
+      one is current. Transaction IDs are not unique across branches, so branch_id is always
+      part of the key. Reads pos.transaction only.
+    data_tests:
+      - unique_combination_of_columns:
+          arguments:
+            combination_of_columns:
+              - branch_id
+              - transaction_id
+              - sale_local_ts
+              - received_ts
+              - sale_amount
+              - cost_amount
+              - item_count
+    columns:
+      - name: stg_transaction_key
+        description: >
+          Staging surrogate key, a hash of the grain columns. Identifies a row in staging, not a
+          business transaction. A fact must never join to it.
+        data_tests:
+          - not_null
+          - unique
+      - name: branch_id
+        description: The branch whose till wrote the row. Part of every transaction key.
+        data_tests:
+          - not_null
+      - name: transaction_id
+        description: Transaction ID numbered by the till. Unique only within a branch, and can repeat for a correction or a void.
+        data_tests:
+          - not_null
+      - name: sale_local_ts
+        description: >
+          When the sale happened, in the branch's local time, as a timestamp without time zone.
+          From sale_datetime, not converted. The branch time zone comes from the ERP
+          (Enterprise Resource Planning) branch table.
+        data_tests:
+          - not_null
+      - name: sale_date
+        description: The branch local calendar date of the sale, the date part of sale_local_ts.
+      - name: received_ts
+        description: >
+          From received_at. Written by the till, not by us, one value per file, and owned by
+          nobody, so its meaning can change without warning. It is not an arrival date.
+        data_tests:
+          - not_null
+      - name: sale_amount
+        description: Sale total, decimal(18, 2). Negative for a refund or return; an exchange can be negative, zero or positive.
+        data_tests:
+          - not_null
+      - name: cost_amount
+        description: Cost of the goods in the sale, decimal(18, 2).
+        data_tests:
+          - not_null
+      - name: item_count
+        description: Number of items in the sale.
+        data_tests:
+          - not_null
+      - name: source_file_name
+        description: Path of the file the row was read from (the filename column of the read). When identical copies arrive in several files, the earliest file.
+      - name: inserted_ts
+        description: Audit column. Time of the run that built the row, with time zone.
+      - name: updated_ts
+        description: Audit column. Time of the run that built the row, with time zone.

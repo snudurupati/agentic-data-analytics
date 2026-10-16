@@ -1,0 +1,51 @@
+# Connection settings for this project.
+#
+# dbt normally writes this to ~/.dbt/profiles.yml, outside the repo, because at
+# a real company it holds warehouse credentials. There are none here. DuckDB is
+# a file on disk, so this lives in the project and gets committed. Anyone who
+# clones the repo can run it without setting anything up.
+
+analytics:                  # must match `profile:` in dbt_project.yml
+  target: dev               # which output below to use by default
+  outputs:
+    dev:
+      type: duckdb
+      path: analytics.duckdb   # the database file, created on first run
+      threads: 4
+      settings:
+        TimeZone: UTC          # timestamps turn into the same text on every machine
+
+    # One scratch database per teammate while an agent team builds in parallel. DuckDB lets only
+    # one process write to a database file, so teammates running dbt at the same moment would
+    # block each other on analytics.duckdb. These files sit in target/, which git ignores.
+    # Use one with: ../.venv/bin/dbt build --target erp --select ...
+    crm:
+      type: duckdb
+      path: target/team_crm.duckdb
+      threads: 4
+      settings:
+        TimeZone: UTC
+    ecom:
+      type: duckdb
+      path: target/team_ecom.duckdb
+      threads: 4
+      settings:
+        TimeZone: UTC
+    erp:
+      type: duckdb
+      path: target/team_erp.duckdb
+      threads: 4
+      settings:
+        TimeZone: UTC
+    pos:
+      type: duckdb
+      path: target/team_pos.duckdb
+      threads: 4
+      settings:
+        TimeZone: UTC
+    marts:
+      type: duckdb
+      path: target/team_marts.duckdb
+      threads: 4
+      settings:
+        TimeZone: UTC
