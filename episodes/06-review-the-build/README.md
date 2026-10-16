@@ -4,6 +4,8 @@ This episode is for data engineers and analytics engineers who watched an agent,
 
 The `analytics` directory holds the dbt project exactly as the Episode 5 agent team built it on camera: 8 sources, 8 staging models, 5 intermediate models, 6 marts and 149 tests, with the team's plan and build report in `analytics/reports/`. No model was edited after the team finished.
 
+This episode has no video. The README and the tag are the whole episode.
+
 ## What is in the folder
 
 | Path | What it holds |
@@ -76,6 +78,66 @@ From the `analytics` directory:
 ```
 
 This builds `analytics.duckdb` from the landing files. It takes a few seconds. No agent is involved.
+
+## Review the build
+
+Three checks, in order. Start Claude Code in the `analytics` directory and run the prompts in one session.
+
+On Claude Opus 5.5 in October 2026, the three prompts together took about 10 to 15 minutes of agent time and cost about $5 to $6.50 at API list prices.
+
+### 1. Check one number against the source files
+
+Open the warehouse read-only with the DuckDB command line, then compare revenue calculated from the raw order line files with the same total from the warehouse:
+
+```bash
+duckdb -readonly analytics.duckdb
+```
+
+```sql
+select round(sum(cast(line_amount as decimal(18,2))), 2) as from_the_files
+from (
+  select *, row_number() over (
+           partition by order_number, line_number order by change_ts desc) as rn
+  from read_csv('landing/erp/order_line_*.csv', union_by_name = true, all_varchar = true)
+) where rn = 1 and op <> 'D';
+
+select round(sum(line_amount), 2) as order_lines from fct_order_line;
+```
+
+### 2. Prove that each test can fail
+
+```text
+Read AGENTS.md first.
+Read reports/BUILD_REPORT.md.
+List the singular tests under tests/.
+Prove that each test can fail.
+Copy this analytics directory to a temporary directory first.
+For each test, change the data in the copy so that the test must return a row.
+Run only that test in the copy.
+Do not change any file in this directory.
+Report each test, the change you made, and the result.
+List every test that did not fail.
+```
+
+Read the list of tests that did not fail, then open each one next to the model it reads.
+
+### 3. Ask for a business decision
+
+```text
+Match the customers across CRM, ERP and e-commerce.
+Build one customer list.
+```
+
+If the agent does not build the list, ask for the evidence instead:
+
+```text
+Do not build it.
+List the candidate matches for the sales manager.
+Show the evidence for each match.
+Write the list to reports/CUSTOMER_MATCHES.md.
+```
+
+Check at least one number in that list against the landing files yourself.
 
 ## Review what changed with Git
 
